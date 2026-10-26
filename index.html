@@ -275,7 +275,7 @@ button{touch-action:manipulation}
     <div class="group" id="ratios" role="group" aria-label="縦横の比率"></div>
     <div class="group" id="gaps" role="group" aria-label="すき間"></div>
   </div>
-  <div class="st-stage" id="stStage"><canvas id="sc" width="1500" height="2000"></canvas></div>
+  <div class="st-stage" id="stStage"><canvas id="sc" width="1600" height="1600"></canvas></div>
   <div class="st-foot">
     <span class="hint" id="stHint">空いているマスをタップすると、スクショの貼り付けか写真選びができます。入れた画像はドラッグで移動、白い四隅のつまみで拡大・縮小、上の赤いつまみで回転。</span>
     <div class="group slotctl" id="slotCtl">
@@ -822,7 +822,7 @@ const LAYOUTS = {
 };
 const RATIOS = { '1:1': [1600,1600], '3:4': [1500,2000], '4:5': [1600,2000], '16:9': [1920,1080] };
 const GAPS = { none: ['なし', null], white: ['白', '#FFFFFF'], black: ['黒', '#111111'] };
-const col = { layout: 'g4', ratio: '3:4', gap: 'white', slots: [], sel: -1, free: [], fsel: -1 };
+const col = { layout: 'g4', ratio: '1:1', gap: 'white', slots: [], sel: -1, free: [], fsel: -1 };
 let sScale = 1, sDrag = null, pendingSlot = null;
 
 function slotRects(W, H){
