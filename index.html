@@ -289,6 +289,7 @@ button{touch-action:manipulation}
       <button class="chip" id="stRepaste" type="button">貼り付けで替える</button>
       <button class="chip" id="stRemove" type="button">外す</button>
     </div>
+    <button class="btn primary" id="fAdd" type="button" hidden>＋ 画像を追加</button>
     <div class="group slotctl" id="freeCtl" hidden>
       <label for="fSize">大きさ</label>
       <input type="range" id="fSize" min="0.03" max="2" step="0.01" value="0.5">
@@ -1125,7 +1126,7 @@ function studioDrop(e){
 // ---------- フリーコラージュ（枚数・配置・重なりを自由に） ----------
 const FW_MIN = 0.03, FW_MAX = 3;
 const HINT_SLOT = '空いているマスをタップすると、スクショの貼り付けか写真選びができます。入れた画像はドラッグで移動、白い四隅のつまみで拡大・縮小、上の赤いつまみで回転。';
-const HINT_FREE = 'フリー：「貼り付け」「画像をまとめて入れる」で何枚でも追加できます。ドラッグで移動、白い四隅で拡大・縮小、赤いつまみで回転。重なり順は「前へ」「後ろへ」で変えられます。';
+const HINT_FREE = 'フリー：「＋ 画像を追加」か、画像の外をタップすると次の画像を貼り付けられます。ドラッグで移動、白い四隅で拡大・縮小、赤いつまみで回転。重なり順は「前へ」「後ろへ」。';
 function setHint(){ $('#stHint').textContent = col.layout === 'free' ? HINT_FREE : HINT_SLOT; }
 function fDims(it, W = sc.width, H = sc.height){
   const iw = it.img.naturalWidth || it.img.width, ih = it.img.naturalHeight || it.img.height;
@@ -1247,8 +1248,8 @@ function freeMove(e){
 function freeUp(){
   const d = sDrag; sDrag = null;
   if (!d || d.mode !== 'empty' || d.moved) return;
-  if (!col.free.length) openPad(null);
-  else { col.fsel = -1; renderStudio(); }
+  if (col.fsel >= 0){ col.fsel = -1; renderStudio(); }
+  else openPad(null);
 }
 function pushFree(img, at, k){
   const W = sc.width, H = sc.height, iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
@@ -1286,6 +1287,7 @@ function switchToFree(){
   syncStudioOpts(); renderStudio();
 }
 function syncFreeCtl(){
+  $('#fAdd').hidden = col.layout !== 'free';
   const it = col.layout === 'free' ? col.free[col.fsel] : null;
   $('#freeCtl').hidden = !it;
   if (!it) return;
@@ -1310,6 +1312,7 @@ $('#fDup').addEventListener('click', () => {
   col.free.push({ ...it, x: it.x + 0.04, y: it.y + 0.04 }); col.fsel = col.free.length - 1; renderStudio();
 });
 $('#fDel').addEventListener('click', freeRemove);
+$('#fAdd').addEventListener('click', () => openPad(null));
 
 // ---------- 貼り付け枠（コラージュのマス用） ----------
 const area = $('#pasteArea');
@@ -1323,7 +1326,13 @@ function openPad(slot, main){
   if (!isTouchDevice) setTimeout(() => area.focus(), 60);
 }
 function closePad(){ $('#pastePad').hidden = true; area.innerHTML = ''; area.blur(); }
-function routePasted(blob){ const s = padSlot, m = padMain; closePad(); if (m) loadFile(blob); else fillSlots([blob], s); }
+function routePasted(blob){
+  if (col.layout === 'free' && !studio.hidden && !(typeof padMain !== 'undefined' && padMain)){
+    area.innerHTML = '';
+    addFree([blob]).then(() => { $('#padTitle').textContent = `${col.free.length}枚目を追加しました。続けて貼れます`; });
+    return;
+  }
+  const s = padSlot, m = padMain; closePad(); if (m) loadFile(blob); else fillSlots([blob], s); }
 // クリップボードを直接読む（iPhoneでは「ペースト」の確認が出る）
 $('#padClip').addEventListener('click', async () => {
   try {
