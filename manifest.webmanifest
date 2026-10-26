@@ -1,6 +1,6 @@
 {
-  "name": "TEWAZA 赤ペン",
-  "short_name": "赤ペン",
+  "name": "赤ペンくん",
+  "short_name": "赤ペンくん",
   "description": "画像に手書き風の赤い丸・矢印・文字を書き込めるツール",
   "lang": "ja",
   "start_url": "./",
