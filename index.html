@@ -124,6 +124,8 @@ canvas.text{cursor:text}
 .lay svg{width:30px;height:30px}
 .lay:hover{background:var(--soft);color:var(--ink)}
 .lay[aria-pressed="true"]{background:var(--red);color:var(--on-red)}
+.lay.free{display:flex;align-items:center;gap:3px;padding:5px 9px 5px 6px;font-size:12px;font-weight:700}
+.lay.free svg{width:24px;height:24px}
 .st-stage{position:relative;background:var(--stage);border-radius:14px;overflow:hidden;display:grid;place-items:center;min-height:0;
   background-image:radial-gradient(color-mix(in srgb,var(--muted) 22%,transparent) 1px,transparent 1px);background-size:16px 16px}
 #sc{display:block;touch-action:none;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.18)}
@@ -286,6 +288,18 @@ button{touch-action:manipulation}
       <button class="chip" id="stReplace" type="button">画像を替える</button>
       <button class="chip" id="stRepaste" type="button">貼り付けで替える</button>
       <button class="chip" id="stRemove" type="button">外す</button>
+    </div>
+    <div class="group slotctl" id="freeCtl" hidden>
+      <label for="fSize">大きさ</label>
+      <input type="range" id="fSize" min="0.03" max="2" step="0.01" value="0.5">
+      <label for="fRot">回転</label>
+      <input type="range" id="fRot" min="-180" max="180" step="1" value="0">
+      <output id="fRotVal" for="fRot" style="min-width:3.2em;font-variant-numeric:tabular-nums">0°</output>
+      <button class="chip" id="fFrame" type="button" aria-pressed="false">白フチ</button>
+      <button class="chip" id="fFront" type="button">前へ</button>
+      <button class="chip" id="fBack" type="button">後ろへ</button>
+      <button class="chip" id="fDup" type="button">複製</button>
+      <button class="chip" id="fDel" type="button">削除</button>
     </div>
   </div>
   <input type="file" id="stFile" accept="image/*" hidden>
@@ -681,7 +695,11 @@ $('#clearBtn').addEventListener('click', () => { if (!objs.length) return; pushU
 
 document.addEventListener('keydown', e => {
   if (!$('#pastePad').hidden){ if (e.key === 'Escape') closePad(); return; }
-  if (!$('#studio').hidden){ if (e.key === 'Escape') closeStudio(); return; }
+  if (!$('#studio').hidden){
+    if (e.key === 'Escape') closeStudio();
+    else if ((e.key === 'Delete' || e.key === 'Backspace') && col.layout === 'free' && col.fsel >= 0 && !e.target.matches('input,textarea')){ e.preventDefault(); freeRemove(); }
+    return;
+  }
   if (editing || e.target.matches('input,textarea')) return;
   const k = e.key.toLowerCase(), mod = e.metaKey || e.ctrlKey;
   if (mod && k === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
@@ -804,7 +822,7 @@ const LAYOUTS = {
 };
 const RATIOS = { '1:1': [1600,1600], '3:4': [1500,2000], '4:5': [1600,2000], '16:9': [1920,1080] };
 const GAPS = { none: ['なし', null], white: ['白', '#FFFFFF'], black: ['黒', '#111111'] };
-const col = { layout: 'g4', ratio: '3:4', gap: 'white', slots: [], sel: -1 };
+const col = { layout: 'g4', ratio: '3:4', gap: 'white', slots: [], sel: -1, free: [], fsel: -1 };
 let sScale = 1, sDrag = null, pendingSlot = null;
 
 function slotRects(W, H){
@@ -845,6 +863,7 @@ function handlePts(i){
            pts: [[x0, y0], [x1, y0], [x1, y1], [x0, y1]] };   // 左上・右上・右下・左下
 }
 function drawCollage(c, W, H, preview){
+  if (col.layout === 'free') return drawFree(c, W, H, preview);
   c.fillStyle = GAPS[col.gap][1] || '#FFFFFF'; c.fillRect(0, 0, W, H);
   slotRects(W, H).forEach(([x, y, w, h], i) => {
     const s = col.slots[i];
@@ -908,7 +927,7 @@ function handleAt(p){
   handleSpots(hp, u).forEach(([hx, hy], j) => { const d = Math.hypot(p.x - hx, p.y - hy); if (d < tol && d < bd){ bd = d; best = j; } });
   return best;
 }
-function renderStudio(){ drawCollage(sctx, sc.width, sc.height, true); syncSlotCtl(); }
+function renderStudio(){ drawCollage(sctx, sc.width, sc.height, true); syncSlotCtl(); syncFreeCtl(); setHint(); }
 function fitStudio(){
   const r = $('#stStage').getBoundingClientRect();
   if (!r.width) return;
@@ -932,6 +951,11 @@ function buildStudioOpts(){
     b.addEventListener('click', () => { col.layout = k; col.sel = -1; syncStudioOpts(); renderStudio(); });
     L.appendChild(b);
   });
+  const fb = document.createElement('button'); fb.type = 'button'; fb.className = 'lay free'; fb.dataset.k = 'free';
+  fb.title = 'フリー（自由に配置）'; fb.setAttribute('aria-label', 'フリー（自由に配置）');
+  fb.innerHTML = '<svg viewBox="0 0 30 30" fill="currentColor"><rect x="3" y="4" width="14" height="10" rx="1.5" transform="rotate(-10 10 9)"/><rect x="12" y="12" width="15" height="11" rx="1.5" opacity=".7" transform="rotate(8 19 17)"/><rect x="4" y="17" width="9" height="9" rx="1.5" transform="rotate(5 8 21)"/></svg>フリー';
+  fb.addEventListener('click', switchToFree);
+  L.appendChild(fb);
   const R = $('#ratios');
   Object.keys(RATIOS).forEach(k => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.k = k; b.textContent = k;
@@ -939,7 +963,7 @@ function buildStudioOpts(){
     R.appendChild(b);
   });
   const G = $('#gaps');
-  const lab = document.createElement('span'); lab.className = 'slotctl'; lab.style.padding = '0 4px'; lab.textContent = 'すき間'; G.appendChild(lab);
+  const lab = document.createElement('span'); lab.className = 'slotctl'; lab.style.padding = '0 4px'; lab.id = 'gapLabel'; lab.textContent = 'すき間'; G.appendChild(lab);
   Object.keys(GAPS).forEach(k => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.k = k; b.textContent = GAPS[k][0];
     b.addEventListener('click', () => { col.gap = k; syncStudioOpts(); renderStudio(); });
@@ -950,9 +974,10 @@ function syncStudioOpts(){
   document.querySelectorAll('#layouts .lay').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === col.layout)));
   document.querySelectorAll('#ratios .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === col.ratio)));
   document.querySelectorAll('#gaps .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === col.gap)));
+  $('#gapLabel').textContent = col.layout === 'free' ? '背景' : 'すき間';
 }
 function syncSlotCtl(){
-  const s = col.slots[col.sel], on = !!(s && s.img && col.sel < LAYOUTS[col.layout].r.length);
+  const s = col.layout === 'free' ? null : col.slots[col.sel], on = !!(s && s.img && col.sel < LAYOUTS[col.layout].r.length);
   $('#slotCtl').hidden = !on;
   if (on){
     $('#stZoom').value = s.zoom;
@@ -980,6 +1005,7 @@ function readImage(file){
 async function fillSlots(files, startAt){
   files = [...files].filter(f => f && f.type.startsWith('image/'));
   if (!files.length){ toast('画像ファイルを選んでください'); return; }
+  if (col.layout === 'free') return addFree(files);
   const n = LAYOUTS[col.layout].r.length, targets = [];
   if (startAt != null) targets.push(startAt);
   for (let i = 0; i < n && targets.length < files.length; i++) if (!col.slots[i] && !targets.includes(i)) targets.push(i);
@@ -1008,6 +1034,7 @@ function normRot(r, snap){
   return d * Math.PI / 180;
 }
 sc.addEventListener('pointerdown', e => {
+  if (col.layout === 'free') return freeDown(e);
   const p = sPos(e);
   const hj = handleAt(p);
   if (hj === 4){
@@ -1031,6 +1058,7 @@ sc.addEventListener('pointerdown', e => {
   sc.setPointerCapture(e.pointerId);
 });
 sc.addEventListener('pointermove', e => {
+  if (col.layout === 'free') return freeMove(e);
   if (!sDrag) return;
   const p = sPos(e), s = col.slots[sDrag.i];
   const [x, y, w, h] = slotRects(sc.width, sc.height)[sDrag.i];
@@ -1057,6 +1085,7 @@ sc.addEventListener('pointermove', e => {
   col.sel = sDrag.i; renderStudio();
 });
 sc.addEventListener('pointerup', () => {
+  if (col.layout === 'free') return freeUp();
   if (!sDrag) return;
   const d = sDrag; sDrag = null;
   if (d.moved) return;
@@ -1065,6 +1094,11 @@ sc.addEventListener('pointerup', () => {
 });
 sc.addEventListener('pointercancel', () => { sDrag = null; });
 sc.addEventListener('wheel', e => {
+  if (col.layout === 'free'){
+    const i = fHit(sPos(e)), it = col.free[i]; if (!it) return;
+    e.preventDefault(); it.w = Math.min(FW_MAX, Math.max(FW_MIN, it.w * Math.exp(-e.deltaY * 0.0015)));
+    col.fsel = i; renderStudio(); return;
+  }
   const i = slotAt(sPos(e)), s = col.slots[i];
   if (!s) return;
   e.preventDefault();
@@ -1083,8 +1117,199 @@ function studioDrop(e){
   const files = [...(e.dataTransfer?.files || [])];
   const r = sc.getBoundingClientRect();
   const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+  if (col.layout === 'free'){ addFree(files.filter(f => f.type.startsWith('image/')), inside ? sPos(e) : null); return; }
   fillSlots(files, inside ? (slotAt(sPos(e)) >= 0 ? slotAt(sPos(e)) : null) : null);
 }
+
+
+// ---------- フリーコラージュ（枚数・配置・重なりを自由に） ----------
+const FW_MIN = 0.03, FW_MAX = 3;
+const HINT_SLOT = '空いているマスをタップすると、スクショの貼り付けか写真選びができます。入れた画像はドラッグで移動、白い四隅のつまみで拡大・縮小、上の赤いつまみで回転。';
+const HINT_FREE = 'フリー：「貼り付け」「画像をまとめて入れる」で何枚でも追加できます。ドラッグで移動、白い四隅で拡大・縮小、赤いつまみで回転。重なり順は「前へ」「後ろへ」で変えられます。';
+function setHint(){ $('#stHint').textContent = col.layout === 'free' ? HINT_FREE : HINT_SLOT; }
+function fDims(it, W = sc.width, H = sc.height){
+  const iw = it.img.naturalWidth || it.img.width, ih = it.img.naturalHeight || it.img.height;
+  const dw = it.w * W, dh = dw * ih / iw;
+  return { cx: it.x * W, cy: it.y * H, dw, dh };
+}
+function fCorners(it){
+  const { cx, cy, dw, dh } = fDims(it), a = it.rot || 0, ca = Math.cos(a), sa = Math.sin(a);
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
+    const lx = sx * dw / 2, ly = sy * dh / 2;
+    return [cx + lx * ca - ly * sa, cy + lx * sa + ly * ca];
+  });
+}
+function fRotHandle(it){
+  const { cx, cy, dh } = fDims(it), a = it.rot || 0, d = dh / 2 + 34 / sScale;
+  return [cx + d * Math.sin(a), cy - d * Math.cos(a)];
+}
+function fHit(p){
+  for (let i = col.free.length - 1; i >= 0; i--){
+    const it = col.free[i], { cx, cy, dw, dh } = fDims(it), a = it.rot || 0;
+    const dx = p.x - cx, dy = p.y - cy;
+    const lx = dx * Math.cos(a) + dy * Math.sin(a), ly = -dx * Math.sin(a) + dy * Math.cos(a);
+    if (Math.abs(lx) <= dw / 2 && Math.abs(ly) <= dh / 2) return i;
+  }
+  return -1;
+}
+function drawRotKnob(c, hx, hy, r, u){
+  c.beginPath(); c.arc(hx, hy, r * 1.25, 0, Math.PI * 2);
+  c.fillStyle = '#E8262B'; c.fill(); c.lineWidth = 2.5 * u; c.strokeStyle = '#FFFFFF'; c.stroke();
+  c.beginPath(); c.arc(hx, hy, r * 0.6, -Math.PI * 0.9, Math.PI * 0.55); c.lineWidth = 2.2 * u; c.stroke();
+  const ex = hx + Math.cos(Math.PI * 0.55) * r * 0.6, ey = hy + Math.sin(Math.PI * 0.55) * r * 0.6;
+  c.beginPath(); c.moveTo(ex - 3.5 * u, ey - 1 * u); c.lineTo(ex, ey); c.lineTo(ex + 1 * u, ey - 4 * u); c.stroke();
+}
+function drawFree(c, W, H, preview){
+  c.fillStyle = GAPS[col.gap][1] || '#FFFFFF'; c.fillRect(0, 0, W, H);
+  const m = Math.min(W, H);
+  col.free.forEach(it => {
+    const { cx, cy, dw, dh } = fDims(it, W, H);
+    c.save(); c.translate(cx, cy); c.rotate(it.rot || 0);
+    if (it.frame){
+      const b = m * 0.012;
+      c.shadowColor = 'rgba(0,0,0,.28)'; c.shadowBlur = m * 0.02; c.shadowOffsetY = m * 0.006;
+      c.fillStyle = '#FFFFFF'; c.fillRect(-dw / 2 - b, -dh / 2 - b, dw + 2 * b, dh + 2 * b);
+      c.shadowColor = 'transparent';
+    }
+    c.drawImage(it.img, -dw / 2, -dh / 2, dw, dh);
+    c.restore();
+  });
+  if (!preview) return;
+  const u = 1 / sScale;
+  if (!col.free.length){
+    c.fillStyle = col.gap === 'black' ? '#9AA3AE' : '#5C6570'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = `700 ${Math.round(18 * u)}px "Zen Kaku Gothic New", "Hiragino Sans", sans-serif`;
+    c.fillText('＋ タップするか「貼り付け」で画像を追加', W / 2, H / 2 - 14 * u);
+    c.font = `${Math.round(14 * u)}px "Zen Kaku Gothic New", "Hiragino Sans", sans-serif`;
+    c.fillText('何枚でも、好きな位置・大きさ・角度で置けます', W / 2, H / 2 + 16 * u);
+    c.textAlign = 'start';
+    return;
+  }
+  const it = col.free[col.fsel]; if (!it) return;
+  const cs = fCorners(it), [rx, ry] = fRotHandle(it), r = 9 * u;
+  c.save(); c.setLineDash([7 * u, 5 * u]); c.lineWidth = 2 * u; c.strokeStyle = '#E8262B';
+  c.beginPath(); cs.forEach(([x, y], j) => j ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); c.stroke();
+  c.setLineDash([]); c.beginPath(); c.moveTo((cs[0][0] + cs[1][0]) / 2, (cs[0][1] + cs[1][1]) / 2); c.lineTo(rx, ry); c.stroke();
+  c.restore();
+  cs.forEach(([x, y]) => {
+    c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
+    c.fillStyle = '#FFFFFF'; c.fill(); c.lineWidth = 3.5 * u; c.strokeStyle = '#E8262B'; c.stroke();
+  });
+  drawRotKnob(c, rx, ry, r, u);
+}
+function freeHandleAt(p){
+  const it = col.free[col.fsel]; if (!it) return -1;
+  const u = 1 / sScale, tol = 24 * u, spots = [...fCorners(it), fRotHandle(it)];
+  let best = -1, bd = Infinity;
+  spots.forEach(([x, y], j) => { const d = Math.hypot(p.x - x, p.y - y); if (d < tol && d < bd){ bd = d; best = j; } });
+  return best;
+}
+function freeDown(e){
+  const p = sPos(e), hj = freeHandleAt(p), it = col.free[col.fsel];
+  if (hj === 4){
+    const { cx, cy } = fDims(it);
+    sDrag = { mode: 'rotate', start: p, moved: true, c0: [cx, cy], rot0: it.rot || 0, a0: Math.atan2(p.y - cy, p.x - cx) };
+  } else if (hj >= 0){
+    const cs = fCorners(it), { cx, cy } = fDims(it);
+    sDrag = { mode: 'scale', start: p, moved: true, anchor: cs[(hj + 2) % 4], w0: it.w, c0: [cx, cy] };
+  } else {
+    const i = fHit(p);
+    if (i < 0) sDrag = { mode: 'empty', start: p, moved: false };
+    else { col.fsel = i; sDrag = { mode: 'move', i, start: p, x0: col.free[i].x, y0: col.free[i].y, moved: false }; renderStudio(); }
+  }
+  sc.setPointerCapture(e.pointerId);
+}
+function freeMove(e){
+  if (!sDrag) return;
+  const p = sPos(e), it = col.free[col.fsel];
+  if (sDrag.mode === 'rotate'){
+    it.rot = normRot(sDrag.rot0 + Math.atan2(p.y - sDrag.c0[1], p.x - sDrag.c0[0]) - sDrag.a0, true);
+    renderStudio(); return;
+  }
+  if (sDrag.mode === 'scale'){
+    const [ax, ay] = sDrag.anchor, vx = sDrag.start.x - ax, vy = sDrag.start.y - ay, den = vx * vx + vy * vy;
+    if (den < 1) return;
+    let f = ((p.x - ax) * vx + (p.y - ay) * vy) / den;
+    const w = Math.min(FW_MAX, Math.max(FW_MIN, sDrag.w0 * f)); f = w / sDrag.w0;
+    it.w = w;
+    it.x = (ax + (sDrag.c0[0] - ax) * f) / sc.width;
+    it.y = (ay + (sDrag.c0[1] - ay) * f) / sc.height;
+    renderStudio(); return;
+  }
+  const dx = p.x - sDrag.start.x, dy = p.y - sDrag.start.y;
+  if (Math.hypot(dx, dy) * sScale > 4) sDrag.moved = true;
+  if (sDrag.mode === 'move' && sDrag.moved){
+    const t = col.free[sDrag.i];
+    t.x = sDrag.x0 + dx / sc.width; t.y = sDrag.y0 + dy / sc.height;
+    renderStudio();
+  }
+}
+function freeUp(){
+  const d = sDrag; sDrag = null;
+  if (!d || d.mode !== 'empty' || d.moved) return;
+  if (!col.free.length) openPad(null);
+  else { col.fsel = -1; renderStudio(); }
+}
+function pushFree(img, at, k){
+  const W = sc.width, H = sc.height, iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const w = Math.min(0.6, 0.6 * (H / W) * (iw / ih));
+  const n = col.free.length, off = k || 0;
+  const x = at ? at.x / W + off * 0.04 : 0.5 + ((n % 5) - 2) * 0.05;
+  const y = at ? at.y / H + off * 0.04 : 0.5 + ((n % 5) - 2) * 0.05;
+  col.free.push({ img, x, y, w, rot: 0, frame: false });
+  col.fsel = col.free.length - 1;
+}
+async function addFree(files, at){
+  let failed = 0, k = 0;
+  for (const f of files){
+    try { pushFree(await readImage(f), at, k++); } catch { failed++; }
+  }
+  if (failed) toast('開けない画像がありました。JPEGかPNGで試してください');
+  renderStudio();
+}
+function freeRemove(){
+  if (col.fsel < 0) return;
+  col.free.splice(col.fsel, 1); col.fsel = -1; renderStudio();
+}
+function switchToFree(){
+  if (col.layout !== 'free' && !col.free.length){
+    // マスに入れていた画像は、そのままの位置でフリーに引き継ぐ
+    const rects = slotRects(sc.width, sc.height);
+    col.slots.slice(0, LAYOUTS[col.layout].r.length).forEach((s, i) => {
+      if (!s || !s.img) return;
+      const [x, y, w, h] = rects[i], iw = s.img.naturalWidth || s.img.width, ih = s.img.naturalHeight || s.img.height;
+      const k = Math.min(w / iw, h / ih);
+      col.free.push({ img: s.img, x: (x + w / 2) / sc.width, y: (y + h / 2) / sc.height, w: iw * k / sc.width, rot: s.rot || 0, frame: false });
+    });
+  }
+  col.layout = 'free'; col.fsel = -1; col.sel = -1;
+  syncStudioOpts(); renderStudio();
+}
+function syncFreeCtl(){
+  const it = col.layout === 'free' ? col.free[col.fsel] : null;
+  $('#freeCtl').hidden = !it;
+  if (!it) return;
+  $('#fSize').value = it.w;
+  const deg = Math.round((it.rot || 0) * 180 / Math.PI);
+  $('#fRot').value = deg; $('#fRotVal').textContent = deg + '°';
+  $('#fFrame').setAttribute('aria-pressed', String(!!it.frame));
+}
+$('#fSize').addEventListener('input', e => { const it = col.free[col.fsel]; if (it){ it.w = +e.target.value; renderStudio(); } });
+$('#fRot').addEventListener('input', e => { const it = col.free[col.fsel]; if (it){ it.rot = +e.target.value * Math.PI / 180; renderStudio(); } });
+$('#fFrame').addEventListener('click', () => { const it = col.free[col.fsel]; if (it){ it.frame = !it.frame; renderStudio(); } });
+$('#fFront').addEventListener('click', () => {
+  if (col.fsel < 0 || col.fsel >= col.free.length - 1) return;
+  const [it] = col.free.splice(col.fsel, 1); col.free.splice(col.fsel + 1, 0, it); col.fsel++; renderStudio();
+});
+$('#fBack').addEventListener('click', () => {
+  if (col.fsel <= 0) return;
+  const [it] = col.free.splice(col.fsel, 1); col.free.splice(col.fsel - 1, 0, it); col.fsel--; renderStudio();
+});
+$('#fDup').addEventListener('click', () => {
+  const it = col.free[col.fsel]; if (!it) return;
+  col.free.push({ ...it, x: it.x + 0.04, y: it.y + 0.04 }); col.fsel = col.free.length - 1; renderStudio();
+});
+$('#fDel').addEventListener('click', freeRemove);
 
 // ---------- 貼り付け枠（コラージュのマス用） ----------
 const area = $('#pasteArea');
@@ -1092,7 +1317,7 @@ let padSlot = null, padMain = false;
 function openPad(slot, main){
   padSlot = slot; padMain = !!main;
   const n = slot == null ? null : slot + 1;
-  $('#padTitle').textContent = padMain ? 'スクショを貼り付けて開く' : n ? `${n}番目のマスに貼り付け` : '空いているマスに貼り付け';
+  $('#padTitle').textContent = padMain ? 'スクショを貼り付けて開く' : n ? `${n}番目のマスに貼り付け` : (col.layout === 'free' ? 'コラージュに画像を追加' : '空いているマスに貼り付け');
   $('#padClip').hidden = !(navigator.clipboard && navigator.clipboard.read);
   area.innerHTML = ''; $('#pastePad').hidden = false;
   if (!isTouchDevice) setTimeout(() => area.focus(), 60);
@@ -1143,6 +1368,7 @@ $('#padClose').addEventListener('click', closePad);
 $('#pastePad').addEventListener('click', e => { if (e.target.id === 'pastePad') closePad(); });
 $('#padPick').addEventListener('click', () => { const s = padSlot, m = padMain; closePad(); if (m) $('#file').click(); else pickFor(s, s == null); });
 $('#stPaste').addEventListener('click', () => {
+  if (col.layout === 'free') return openPad(null);
   const n = LAYOUTS[col.layout].r.length;
   const empty = [...Array(n).keys()].find(i => !col.slots[i]);
   openPad(empty ?? (col.sel >= 0 ? col.sel : 0));
@@ -1152,6 +1378,7 @@ $('#stRepaste').addEventListener('click', () => { if (col.sel >= 0) openPad(col.
 function openStudio(){
   if (editing) commitText();
   if (!col.slots.some(Boolean) && !sampleShown) col.slots[0] = { img: base, zoom: 1, cx: 0.5, cy: 0.5, rot: 0 };
+  if (col.layout === 'free' && !col.free.length && !sampleShown){ [sc.width, sc.height] = RATIOS[col.ratio]; pushFree(base); }
   [sc.width, sc.height] = RATIOS[col.ratio];
   syncStudioOpts(); studio.hidden = false;
   requestAnimationFrame(fitStudio);
@@ -1160,8 +1387,8 @@ function closeStudio(){ studio.hidden = true; }
 $('#colBtn').addEventListener('click', openStudio);
 $('#stCancel').addEventListener('click', closeStudio);
 $('#stDone').addEventListener('click', () => {
-  const n = LAYOUTS[col.layout].r.length;
-  if (!col.slots.slice(0, n).some(s => s && s.img)){ toast('先に画像を1枚以上入れてください'); return; }
+  const empty = col.layout === 'free' ? !col.free.length : !col.slots.slice(0, LAYOUTS[col.layout].r.length).some(s => s && s.img);
+  if (empty){ toast('先に画像を1枚以上入れてください'); return; }
   const [W, H] = RATIOS[col.ratio], out = document.createElement('canvas'); out.width = W; out.height = H;
   drawCollage(out.getContext('2d'), W, H, false);
   setBase(out, false, true);
