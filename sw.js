@@ -1,5 +1,5 @@
 // オフラインでも開けるようにするキャッシュ。内容を更新したら VERSION を上げる
-const VERSION = 'akapen-v1';
+const VERSION = 'akapen-v2';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -17,7 +17,7 @@ self.addEventListener('fetch', e => {
   if (url.origin !== location.origin && !isFont) return;
   if (req.mode === 'navigate'){
     // ページ本体は新しい版を優先し、圏外ならキャッシュを使う
-    e.respondWith(fetch(req).then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put('./index.html', copy)); return res; })
+    e.respondWith(fetch(req, { cache: 'no-cache' }).then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put('./index.html', copy)); return res; })
       .catch(() => caches.match('./index.html')));
     return;
   }
