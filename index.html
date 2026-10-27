@@ -17,234 +17,230 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Yomogi&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <style>
-/* 作業台レイアウト：上に操作バー、中央に画像、下に道具箱。色は赤ペンだけが主役 */
+/* スマホ版：上に小さな操作バー、中央に画像、親指の届く下側に道具。パソコンではスマホの枠の中に表示 */
 :root{
   --bg:#E8EBEE; --surface:#FFFFFF; --ink:#171A1F; --muted:#5C6570; --line:#CFD5DC;
-  --stage:#D9DEE3; --red:#D9252B; --on-red:#FFFFFF; --soft:#F2F4F6;
+  --stage:#D9DEE3; --red:#D9252B; --on-red:#FFFFFF; --soft:#F2F4F6; --desk:#C9CFD6; --bezel:#0B0C0E;
   --font-ui:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
   --font-hand:"Yomogi","Klee One","Hiragino Maru Gothic ProN",cursive;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#111316; --surface:#1A1D21; --ink:#E6E8EB; --muted:#98A1AC; --line:#2D3239;
-  --stage:#0A0C0E; --red:#FF4A4F; --on-red:#1A0405; --soft:#23272C; color-scheme:dark}}
+  --stage:#0A0C0E; --red:#FF4A4F; --on-red:#1A0405; --soft:#23272C; --desk:#060708; --bezel:#2A2E34; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111316; --surface:#1A1D21; --ink:#E6E8EB; --muted:#98A1AC; --line:#2D3239;
-  --stage:#0A0C0E; --red:#FF4A4F; --on-red:#1A0405; --soft:#23272C; color-scheme:dark}
+  --stage:#0A0C0E; --red:#FF4A4F; --on-red:#1A0405; --soft:#23272C; --desk:#060708; --bezel:#2A2E34; color-scheme:dark}
 
 html{height:100%;box-sizing:border-box}
 *,*::before,*::after{box-sizing:border-box}
-body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
-  display:grid;grid-template-rows:auto auto 1fr auto;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  -webkit-tap-highlight-color:transparent}
-button{font:inherit;color:inherit}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 
-header{display:flex;align-items:center;gap:12px;padding-block:12px 10px;flex-wrap:wrap}
-.logo{display:flex;align-items:baseline;gap:8px;margin-right:auto;min-width:0}
-.logo b{font-family:var(--font-hand);font-weight:400;font-size:26px;color:var(--red);line-height:1;
-  background:linear-gradient(transparent 70%,color-mix(in srgb,var(--red) 18%,transparent) 70%)}
-.logo span{font-size:11px;letter-spacing:.14em;color:var(--muted);font-weight:700}
-.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);
-  border-radius:10px;padding:9px 14px;font-size:14px;font-weight:700;cursor:pointer}
-.btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--red);border-color:var(--red);color:var(--on-red)}
-.btn.primary:hover{filter:brightness(1.06)}
-.btn svg{width:18px;height:18px}
-button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--red);outline-offset:2px}
+/* 枠：スマホではそのまま全画面。広い画面ではスマホの形にして中央に置く。
+   transform を付けると、中の固定表示（シートや通知）がこの枠の中に収まる */
+.phone{position:relative;height:100%;width:100%;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;transform:translateZ(0)}
+@media (min-width:600px) and (min-height:700px){
+  body{display:grid;place-items:center;padding:20px 16px;background:var(--desk)}
+  .phone{width:390px;height:min(844px,calc(100vh - 40px));border-radius:46px;border:10px solid var(--bezel);
+    box-shadow:0 30px 80px rgba(0,0,0,.35)}
+}
 
-.notice{font-size:12.5px;color:var(--muted);padding-bottom:8px;line-height:1.6}
+/* 上の操作バー */
+.top{display:flex;align-items:center;gap:6px;padding:16px 14px 8px}
+.logo{margin-right:auto;font-family:var(--font-hand);font-size:25px;line-height:1;color:var(--red);padding:0 2px;
+  background:linear-gradient(transparent 68%,color-mix(in srgb,var(--red) 22%,transparent) 68%);white-space:nowrap}
+.ib{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;padding:0;flex-shrink:0}
+.ib svg{width:21px;height:21px}
+.save{height:44px;border-radius:12px;border:0;background:var(--red);color:var(--on-red);font-weight:700;font-size:15px;
+  padding:0 13px;display:flex;align-items:center;gap:4px;flex-shrink:0}
+.save svg{width:18px;height:18px}
+.notice{font-size:11.5px;color:var(--muted);padding:0 16px 8px;line-height:1.5}
 .notice em{font-style:normal;color:var(--ink);font-weight:700}
 
-/* 行の位置を固定（お知らせ行が消えても画像エリアが縮まないように） */
-body > header{grid-row:1}
-body > .notice{grid-row:2}
-body > .stage{grid-row:3}
-body > .tools{grid-row:4}
-.stage{position:relative;background:var(--stage);border-radius:14px;overflow:auto;
-  display:flex;min-height:0;overscroll-behavior:contain;
-  background-image:radial-gradient(color-mix(in srgb,var(--muted) 22%,transparent) 1px,transparent 1px);
-  background-size:16px 16px;background-attachment:local}
-.board{position:relative;line-height:0;box-shadow:0 6px 24px rgba(0,0,0,.18);margin:auto;flex-shrink:0}
-.zoomval{min-width:4.2em;text-align:center;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);
-  border:0;background:transparent;cursor:pointer;border-radius:8px;padding:7px 4px}
-.zoomval:hover{background:var(--soft)}
+/* 画像エリア */
+.stage-wrap{position:relative;flex:1;min-height:0;margin:0 12px}
+.stage{position:absolute;inset:0;background:var(--stage);border-radius:18px;overflow:auto;display:flex;overscroll-behavior:contain;touch-action:none;
+  background-image:radial-gradient(color-mix(in srgb,var(--muted) 22%,transparent) 1px,transparent 1px);background-size:16px 16px;background-attachment:local}
+.board{position:relative;line-height:0;box-shadow:0 6px 24px rgba(0,0,0,.3);margin:auto;flex-shrink:0}
 canvas{display:block;touch-action:none;cursor:crosshair;max-width:none}
-.stage{touch-action:none}
 canvas.move{cursor:grab}
 canvas.text{cursor:text}
 .drop{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--red) 14%,transparent);
-  border:3px dashed var(--red);border-radius:14px;font-weight:700;color:var(--red);font-size:18px;pointer-events:none}
+  border:3px dashed var(--red);border-radius:18px;font-weight:700;color:var(--red);font-size:17px;pointer-events:none}
+.zoom{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:2px;padding:3px;border-radius:999px;
+  background:color-mix(in srgb,var(--surface) 92%,transparent);border:1px solid var(--line)}
+.zoom button{width:34px;height:34px;border-radius:999px;border:0;background:transparent;font-size:19px;line-height:1;padding:0}
+.zoomval{min-width:44px;height:34px;border:0;background:transparent;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;border-radius:999px}
+.float{position:absolute;left:10px;bottom:10px;display:flex;gap:8px}
+.round{width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 92%,transparent);
+  display:grid;place-items:center;padding:0}
+.round svg{width:20px;height:20px}
+.round:disabled{opacity:.4;cursor:default}
+.pinch{position:absolute;right:12px;bottom:16px;font-size:11px;color:var(--muted);pointer-events:none}
 
 #ta{position:absolute;line-height:1.25;background:color-mix(in srgb,#fff 10%,transparent);
-  border:1.5px dashed currentColor;border-radius:4px;padding:0 2px;margin:0;resize:none;overflow:hidden;
-  white-space:pre;outline:none;min-width:2em}
+  border:1.5px dashed currentColor;border-radius:4px;padding:0 2px;margin:0;resize:none;overflow:hidden;white-space:pre;outline:none;min-width:2em}
 .taok{position:absolute;line-height:1;transform:translateY(-110%);background:var(--red);color:var(--on-red);
-  border:0;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:700;cursor:pointer}
+  border:0;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700}
 
-.tools{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding-block:10px 14px}
-.group{display:flex;gap:4px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
-.tool{display:grid;justify-items:center;gap:1px;border:0;background:transparent;border-radius:8px;
-  padding:5px 8px;min-width:46px;cursor:pointer;font-size:10.5px;color:var(--muted);font-weight:700}
+/* 下の道具箱 */
+.dock{margin-top:10px;background:var(--surface);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:10px 14px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.tools5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.tool{height:54px;border-radius:14px;border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:700;padding:0}
 .tool svg{width:22px;height:22px}
-.tool:hover{background:var(--soft);color:var(--ink)}
 .tool[aria-pressed="true"]{background:var(--red);color:var(--on-red)}
-.tool:disabled{opacity:.35;cursor:default;background:transparent;color:var(--muted)}
-.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0;position:relative}
+.row{display:flex;align-items:center;gap:8px}
+#colors{display:flex;gap:7px}
+.sw{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);padding:0;flex-shrink:0}
 .sw[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--surface) inset}
-.size{display:flex;align-items:center;gap:8px;padding:0 8px;font-size:11px;color:var(--muted);font-weight:700}
-.size input{width:110px;accent-color:var(--red)}
-.dot{width:26px;height:26px;display:grid;place-items:center}
-.dot i{display:block;border-radius:50%}
-.chip{border:0;background:transparent;border-radius:8px;padding:7px 10px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
-.chip:hover{background:var(--soft);color:var(--ink)}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.chip{height:32px;border-radius:999px;border:1px solid var(--line);background:transparent;padding:0 11px;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
 .chip.hand{font-family:var(--font-hand);font-weight:400;font-size:14px}
 .chip.bold{font-family:"Dela Gothic One",var(--font-ui);font-weight:400}
-.spacer{flex:1}
+.chip:disabled{opacity:.35;cursor:default}
+.finish{margin-left:auto;display:flex;gap:6px}
+.size label{font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0}
+.size input{flex:1;min-width:0;accent-color:var(--red)}
+.dot{width:24px;height:24px;display:grid;place-items:center;flex-shrink:0}
+.dot i{display:block;border-radius:50%}
 
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
-  background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:700;
-  z-index:30;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+/* 通知 */
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;
+  z-index:30;box-shadow:0 6px 20px rgba(0,0,0,.3);width:max-content;max-width:calc(100% - 32px);text-align:center}
 
-.sheet{position:fixed;inset:0;z-index:20;background:rgba(10,12,14,.72);display:grid;place-items:center;
-  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.sheet-in{background:var(--surface);border-radius:16px;padding:16px;display:grid;gap:12px;max-width:min(720px,100%);max-height:100%;min-height:0;grid-template-rows:auto minmax(0,1fr) auto}
-.sheet h2{margin:0;font-size:16px;text-wrap:balance}
-.sheet p{margin:4px 0 0;font-size:13px;color:var(--muted);line-height:1.6}
-.sheet img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;min-height:0;justify-self:center;
-  -webkit-touch-callout:default;user-select:auto}
-.sheet .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-
-/* コラージュ編集 */
-.studio{position:fixed;inset:0;z-index:15;background:var(--bg);display:grid;grid-template-rows:auto auto 1fr auto;
-  padding:max(10px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.st-head{display:flex;align-items:center;gap:8px;padding-block:4px 10px;flex-wrap:wrap}
-.st-head b{font-family:var(--font-hand);font-weight:400;font-size:24px;color:var(--red);margin-right:auto}
-.st-opts{display:flex;flex-wrap:wrap;gap:8px 12px;padding-bottom:10px}
-.lay{border:0;background:transparent;border-radius:8px;padding:5px;cursor:pointer;color:var(--muted);display:grid}
-.lay svg{width:30px;height:30px}
-.lay:hover{background:var(--soft);color:var(--ink)}
-.lay[aria-pressed="true"]{background:var(--red);color:var(--on-red)}
-.lay.free{display:flex;align-items:center;gap:3px;padding:5px 9px 5px 6px;font-size:12px;font-weight:700}
-.lay.free svg{width:24px;height:24px}
-.st-stage{position:relative;background:var(--stage);border-radius:14px;overflow:hidden;display:grid;place-items:center;min-height:0;
-  background-image:radial-gradient(color-mix(in srgb,var(--muted) 22%,transparent) 1px,transparent 1px);background-size:16px 16px}
-#sc{display:block;touch-action:none;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.18)}
-.st-foot{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;padding-block:10px 4px}
-.hint{font-size:12.5px;color:var(--muted);line-height:1.5;flex:1 1 220px;min-width:0}
-.slotctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 8px;font-size:11px;color:var(--muted);font-weight:700}
-.slotctl input{width:100px;accent-color:var(--red)}
-
-/* 貼り付け枠 */
-.pad-in{grid-template-rows:auto auto auto;width:min(460px,100%)}
-.paste-area{min-height:150px;border:2px dashed var(--red);border-radius:12px;display:grid;place-items:center;
-  padding:12px;text-align:center;color:var(--muted);font-size:15px;font-weight:700;background:var(--soft);
-  -webkit-user-select:text;user-select:text;caret-color:transparent;overflow:hidden;cursor:pointer;outline:none}
-.paste-area:focus{background:color-mix(in srgb,var(--red) 8%,var(--soft))}
+/* 下から出るシート（保存・貼り付け） */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(5,6,8,.62);display:flex;align-items:flex-end}
+.sheet-in{width:100%;max-height:92%;background:var(--surface);border-top:1px solid var(--line);border-radius:24px 24px 0 0;
+  padding:10px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;min-height:0}
+.sheet-in::before{content:"";width:40px;height:5px;border-radius:3px;background:var(--line);align-self:center}
+.sheet h2{margin:0;font-size:17px;line-height:1.35}
+.sheet p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.6}
+.sheet img{max-width:100%;max-height:46vh;object-fit:contain;border-radius:10px;align-self:center;-webkit-touch-callout:default;user-select:auto}
+.sheet .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.big{height:50px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:15px;font-weight:700}
+.big.primary{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.paste-area{min-height:110px;border:2px dashed var(--red);border-radius:14px;display:grid;place-items:center;
+  padding:12px;text-align:center;color:var(--muted);font-size:15px;font-weight:700;background:color-mix(in srgb,var(--red) 6%,transparent);
+  -webkit-user-select:text;user-select:text;caret-color:transparent;overflow:hidden;outline:none}
+.paste-area:focus{background:color-mix(in srgb,var(--red) 12%,transparent)}
 .paste-area:empty::before{content:attr(data-ph)}
-.paste-area img{max-width:100%;max-height:120px}
+.paste-area img{max-width:100%;max-height:100px}
 
-@media (max-width:640px){
-  .logo b{font-size:22px}
-  .tool{min-width:40px;padding:5px 5px}
-  .size input{width:80px}
-  .spacer{display:none}
-  .btn{padding:8px 11px}
-}
+/* コラージュ */
+.studio{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column}
+.st-head{display:flex;align-items:center;gap:8px;padding:16px 14px 6px}
+.st-head b{margin:0 auto;font-family:var(--font-hand);font-weight:400;font-size:24px;color:var(--red)}
+.hbtn{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:700;padding:0 13px;flex-shrink:0}
+.hbtn.primary{background:var(--red);border-color:var(--red);color:var(--on-red)}
+#layouts{display:flex;gap:6px;overflow-x:auto;padding:4px 14px;scrollbar-width:none}
+#layouts::-webkit-scrollbar{display:none}
+.lay{flex-shrink:0;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;padding:0}
+.lay svg{width:26px;height:26px}
+.lay[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:var(--on-red)}
+.lay.free{width:auto;display:flex;align-items:center;gap:4px;padding:0 12px 0 8px;font-size:13px;font-weight:700}
+.lay.free svg{width:22px;height:22px}
+.opts2{display:flex;align-items:center;gap:8px;padding:6px 14px 8px}
+.seg{display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+#gaps{margin-left:auto}
+.seg .chip{height:30px;border:0;border-radius:8px;padding:0 9px}
+.seg .chip[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.seg .slotctl{font-size:11px;font-weight:700;color:var(--muted);padding:0 4px 0 6px}
+.st-stage{position:relative;flex:1;min-height:0;margin:0 12px;background:var(--stage);border-radius:16px;overflow:hidden;display:grid;place-items:center;
+  background-image:radial-gradient(color-mix(in srgb,var(--muted) 22%,transparent) 1px,transparent 1px);background-size:16px 16px}
+#sc{display:block;touch-action:none;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.addrow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:8px;padding:10px 14px 0}
+#fAdd{display:none!important}
+.st-foot{margin-top:10px;background:var(--surface);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:10px 14px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
+.hint{font-size:11.5px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ctl{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:6px 10px}
+.ctl[hidden]{display:none!important}
+.ctl label{font-size:12px;font-weight:700;color:var(--muted)}
+.ctl input[type=range]{width:100%;accent-color:var(--red)}
+.ctl output{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.ctl .chips{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px}
+.ctl .chips .chip{height:38px;border-radius:10px;color:var(--ink)}
+.ctl .chips .chip[aria-pressed="true"]{color:var(--surface)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* 単体ページ用の土台 */
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{background:var(--bg)}
-body{margin:0;font-size:14px}
 img{max-width:100%}
 [hidden]{display:none!important}
 button{touch-action:manipulation}
-@media (max-width:640px){
-  header{gap:6px}
-  .logo span{display:none}
-  header .btn{padding:7px 9px;font-size:12.5px;gap:4px}
-  header .btn svg{width:16px;height:16px}
-}
 </style>
 </head>
 <body>
-
-<header>
-  <div class="logo"><b>赤ペンくん</b><span>画像に手書きで注釈</span></div>
+<div class="phone" id="app">
+<header class="top">
+  <div class="logo">赤ペンくん</div>
   <input type="file" id="file" accept="image/*" hidden>
-  <button class="btn" id="openBtn" type="button">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
-    画像を開く</button>
-  <button class="btn" id="pasteBtn" type="button">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h4"/></svg>
-    貼り付け</button>
-  <button class="btn" id="colBtn" type="button">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
-    コラージュ</button>
-  <button class="btn primary" id="saveBtn" type="button">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
-    保存</button>
+  <button class="ib" id="openBtn" type="button" aria-label="画像を開く" title="画像を開く">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></button>
+  <button class="ib" id="pasteBtn" type="button" aria-label="貼り付け" title="貼り付け">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h4"/></svg></button>
+  <button class="ib" id="colBtn" type="button" aria-label="コラージュ" title="コラージュ">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></button>
+  <button class="save" id="saveBtn" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>保存</button>
 </header>
 
-<div class="notice" id="notice"><em>見本の画像です。</em>「画像を開く」、ドラッグ＆ドロップ、または ⌘V（貼り付け）で自分の画像に差し替えられます。</div>
+<div class="notice" id="notice"><em>見本の画像です。</em>右上のボタンで自分の画像を開くか、貼り付けて差し替えられます。</div>
 
-<main class="stage" id="stage">
-  <div class="board" id="board">
-    <canvas id="cv" width="1200" height="960"></canvas>
-    <textarea id="ta" hidden spellcheck="false" aria-label="入れる文字"></textarea>
-    <button class="taok" id="taok" type="button" hidden>確定</button>
+<div class="stage-wrap">
+  <main class="stage" id="stage">
+    <div class="board" id="board">
+      <canvas id="cv" width="1200" height="960"></canvas>
+      <textarea id="ta" hidden spellcheck="false" aria-label="入れる文字"></textarea>
+      <button class="taok" id="taok" type="button" hidden>確定</button>
+    </div>
+    <div class="drop" id="drop" hidden>ここに画像をドロップ</div>
+  </main>
+  <div class="zoom" role="group" aria-label="表示の拡大縮小">
+    <button id="zOut" type="button" aria-label="縮小">−</button>
+    <button class="zoomval" id="zVal" type="button" title="画面に合わせる">全体</button>
+    <button id="zIn" type="button" aria-label="拡大">＋</button>
   </div>
-  <div class="drop" id="drop" hidden>ここに画像をドロップ</div>
-</main>
+  <div class="float">
+    <button class="round" id="undoBtn" type="button" aria-label="元に戻す">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h10a5 5 0 0 1 0 10H9"/><path d="M8 6l-4 4 4 4"/></svg></button>
+    <button class="round" id="redoBtn" type="button" aria-label="やり直す">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10H10a5 5 0 0 0 0 10h5"/><path d="M16 6l4 4-4 4"/></svg></button>
+  </div>
+  <div class="pinch">2本指でピンチして拡大</div>
+</div>
 
-<footer class="tools" id="tools">
-  <div class="group" role="group" aria-label="道具">
-    <button class="tool" data-tool="pen" type="button" title="ペン (P)" aria-pressed="false">
+<footer class="dock" id="tools">
+  <div class="tools5" role="group" aria-label="道具">
+    <button class="tool" data-tool="pen" type="button" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg>ペン</button>
-    <button class="tool" data-tool="circle" type="button" title="丸 (O)" aria-pressed="true">
+    <button class="tool" data-tool="circle" type="button" aria-pressed="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 5.2c4.6.3 7.5 2.9 7 6.6-.5 4-4.6 7-9.6 6.7C5.6 18.2 3.3 15.4 4 12c.8-4 5.3-7.2 11-6.4"/></svg>丸</button>
-    <button class="tool" data-tool="arrow" type="button" title="矢印 (A)" aria-pressed="false">
+    <button class="tool" data-tool="arrow" type="button" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 18C15 20 8 17 5 7"/><path d="M2.5 10.5L5 6.5l3.6 3"/></svg>矢印</button>
-    <button class="tool" data-tool="text" type="button" title="文字 (T)" aria-pressed="false">
+    <button class="tool" data-tool="text" type="button" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M12 6v13M9 19h6"/></svg>文字</button>
-    <button class="tool" data-tool="move" type="button" title="移動 (V)" aria-pressed="false">
+    <button class="tool" data-tool="move" type="button" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 1.5L10 19z"/></svg>移動</button>
   </div>
-
-  <div class="group" role="group" aria-label="色" id="colors"></div>
-
-  <div class="group size">
-    <span class="dot"><i id="dotPreview"></i></span>
+  <div class="row">
+    <div id="colors" role="group" aria-label="色"></div>
+    <div class="finish">
+      <button class="chip" id="olBtn" type="button" aria-pressed="false">フチ</button>
+      <button class="chip hand" id="fHand" type="button" aria-pressed="true" hidden>手書き</button>
+      <button class="chip bold" id="fBold" type="button" aria-pressed="false" hidden>極太</button>
+    </div>
+  </div>
+  <div class="row size">
     <label for="sizeR">太さ</label>
+    <span class="dot"><i id="dotPreview"></i></span>
     <input type="range" id="sizeR" min="2" max="20" step="1" value="6">
-  </div>
-
-  <div class="group" role="group" aria-label="仕上げ">
-    <button class="chip" id="olBtn" type="button" aria-pressed="false" title="白いフチを付けて背景から浮かせる">フチ</button>
-    <button class="chip hand" id="fHand" type="button" aria-pressed="true" hidden>手書き</button>
-    <button class="chip bold" id="fBold" type="button" aria-pressed="false" hidden>極太</button>
-  </div>
-
-  <div class="group" role="group" aria-label="表示の拡大縮小">
-    <button class="tool" id="zOut" type="button" title="縮小 (−)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M20 20l-4-4"/></svg>縮小</button>
-    <button class="zoomval" id="zVal" type="button" title="画面に合わせる (0)">全体</button>
-    <button class="tool" id="zIn" type="button" title="拡大 (+)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M11 8v6M20 20l-4-4"/></svg>拡大</button>
-  </div>
-
-  <span class="spacer"></span>
-
-  <div class="group" role="group" aria-label="編集">
-    <button class="tool" id="undoBtn" type="button" title="元に戻す (⌘Z)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h10a5 5 0 0 1 0 10H9"/><path d="M8 6l-4 4 4 4"/></svg>戻す</button>
-    <button class="tool" id="redoBtn" type="button" title="やり直す (⇧⌘Z)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10H10a5 5 0 0 0 0 10h5"/><path d="M16 6l4 4-4 4"/></svg>進む</button>
-    <button class="tool" id="delBtn" type="button" title="選んだものを消す (Delete)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/></svg>消す</button>
-    <button class="tool" id="clearBtn" type="button" title="書き込みを全部消す">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16l9-9 3 3-6 6H7z"/><path d="M11 12l3 3"/></svg>全消し</button>
+    <button class="chip" id="delBtn" type="button">消す</button>
+    <button class="chip" id="clearBtn" type="button">全消し</button>
   </div>
 </footer>
 
@@ -252,77 +248,84 @@ button{touch-action:manipulation}
   <div class="sheet-in">
     <div>
       <h2>画像ができました</h2>
-      <p>スマホは画像を長押し →「写真に保存」。Macは右クリック →「画像を別名で保存」か、デスクトップへドラッグ。</p>
+      <p>画像を長押し →「写真に保存」で保存できます。</p>
     </div>
     <img id="outImg" alt="書き込み済みの画像">
+    <button class="big primary" id="shareBtn" type="button" hidden>写真に保存・共有</button>
     <div class="row">
-      <button class="btn" id="shareBtn" type="button" hidden>写真に保存・共有</button>
-      <button class="btn" id="copyBtn" type="button">画像をコピー</button>
-      <button class="btn primary" id="closeSheet" type="button">閉じる</button>
+      <button class="big" id="copyBtn" type="button">画像をコピー</button>
+      <button class="big primary" id="closeSheet" type="button">閉じる</button>
     </div>
   </div>
 </div>
 
 <div class="studio" id="studio" hidden>
   <div class="st-head">
+    <button class="hbtn" id="stCancel" type="button">やめる</button>
     <b>コラージュ</b>
-    <button class="btn" id="stPaste" type="button">貼り付け</button>
-    <button class="btn" id="stMulti" type="button">画像をまとめて入れる</button>
-    <button class="btn" id="stCancel" type="button">やめる</button>
-    <button class="btn primary" id="stDone" type="button">書き込みへ進む</button>
+    <button class="hbtn primary" id="stDone" type="button">書き込みへ</button>
   </div>
-  <div class="st-opts">
-    <div class="group" id="layouts" role="group" aria-label="並べ方"></div>
-    <div class="group" id="ratios" role="group" aria-label="縦横の比率"></div>
-    <div class="group" id="gaps" role="group" aria-label="すき間"></div>
+  <div id="layouts" role="group" aria-label="並べ方"></div>
+  <div class="opts2">
+    <div class="seg" id="ratios" role="group" aria-label="縦横の比率"></div>
+    <div class="seg" id="gaps" role="group" aria-label="すき間"></div>
   </div>
   <div class="st-stage" id="stStage"><canvas id="sc" width="1600" height="1600"></canvas></div>
+  <div class="addrow">
+    <button class="big primary" id="stPaste" type="button">＋ 画像を追加</button>
+    <button class="big" id="stMulti" type="button">写真から選ぶ</button>
+  </div>
   <div class="st-foot">
-    <span class="hint" id="stHint">空いているマスをタップすると、スクショの貼り付けか写真選びができます。入れた画像はドラッグで移動、白い四隅のつまみで拡大・縮小、上の赤いつまみで回転。</span>
-    <div class="group slotctl" id="slotCtl">
+    <span class="hint" id="stHint"></span>
+    <div class="ctl" id="slotCtl">
       <label for="stZoom">拡大</label>
-      <input type="range" id="stZoom" min="0.2" max="6" step="0.01" value="1">
+      <input type="range" id="stZoom" min="0.2" max="6" step="0.01" value="1"><span></span>
       <label for="stRot">回転</label>
       <input type="range" id="stRot" min="-180" max="180" step="1" value="0">
-      <output id="stRotVal" for="stRot" style="min-width:3.2em;font-variant-numeric:tabular-nums">0°</output>
-      <button class="chip" id="stFitBtn" type="button">元に戻す</button>
-      <button class="chip" id="stReplace" type="button">画像を替える</button>
-      <button class="chip" id="stRepaste" type="button">貼り付けで替える</button>
-      <button class="chip" id="stRemove" type="button">外す</button>
+      <output id="stRotVal" for="stRot">0°</output>
+      <div class="chips">
+        <button class="chip" id="stFitBtn" type="button">元に戻す</button>
+        <button class="chip" id="stReplace" type="button">替える</button>
+        <button class="chip" id="stRepaste" type="button">貼って替える</button>
+        <button class="chip" id="stRemove" type="button">外す</button>
+      </div>
     </div>
-    <button class="btn primary" id="fAdd" type="button" hidden>＋ 画像を追加</button>
-    <div class="group slotctl" id="freeCtl" hidden>
+    <button class="big primary" id="fAdd" type="button" hidden>＋ 画像を追加</button>
+    <div class="ctl" id="freeCtl" hidden>
       <label for="fSize">大きさ</label>
-      <input type="range" id="fSize" min="0.03" max="2" step="0.01" value="0.5">
+      <input type="range" id="fSize" min="0.03" max="2" step="0.01" value="0.5"><span></span>
       <label for="fRot">回転</label>
       <input type="range" id="fRot" min="-180" max="180" step="1" value="0">
-      <output id="fRotVal" for="fRot" style="min-width:3.2em;font-variant-numeric:tabular-nums">0°</output>
-      <button class="chip" id="fFrame" type="button" aria-pressed="false">白フチ</button>
-      <button class="chip" id="fFront" type="button">前へ</button>
-      <button class="chip" id="fBack" type="button">後ろへ</button>
-      <button class="chip" id="fDup" type="button">複製</button>
-      <button class="chip" id="fDel" type="button">削除</button>
+      <output id="fRotVal" for="fRot">0°</output>
+      <div class="chips">
+        <button class="chip" id="fFrame" type="button" aria-pressed="false">白フチ</button>
+        <button class="chip" id="fFront" type="button">前へ</button>
+        <button class="chip" id="fBack" type="button">後ろへ</button>
+        <button class="chip" id="fDup" type="button">複製</button>
+        <button class="chip" id="fDel" type="button">削除</button>
+      </div>
     </div>
   </div>
   <input type="file" id="stFile" accept="image/*" hidden>
 </div>
 
 <div class="sheet" id="pastePad" hidden>
-  <div class="sheet-in pad-in">
+  <div class="sheet-in">
     <div>
       <h2 id="padTitle">スクショを貼り付け</h2>
-      <p>スクショをコピーしてから「コピーした画像を貼る」を押してください。うまくいかないときは下の枠を長押し →「ペースト」。Macは枠をクリックして ⌘V。</p>
+      <p>スクショをコピーしてから、下の枠を長押し →「ペースト」。Macは枠をクリックして ⌘V。</p>
     </div>
+    <button class="big primary" id="padClip" type="button" hidden>コピーした画像を貼る</button>
     <div id="pasteArea" class="paste-area" contenteditable="true" inputmode="none" role="textbox" aria-label="ここに画像を貼り付け" data-ph="ここを長押し →「ペースト」"></div>
     <div class="row">
-      <button class="btn primary" id="padClip" type="button" hidden>コピーした画像を貼る</button>
-      <button class="btn" id="padPick" type="button">写真から選ぶ</button>
-      <button class="btn" id="padClose" type="button">閉じる</button>
+      <button class="big" id="padPick" type="button">写真から選ぶ</button>
+      <button class="big primary" id="padClose" type="button">完了</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast" hidden></div>
+</div>
 
 <script>
 (() => {
