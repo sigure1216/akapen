@@ -69,6 +69,7 @@ body > .tools{grid-row:4}
   border:0;background:transparent;cursor:pointer;border-radius:8px;padding:7px 4px}
 .zoomval:hover{background:var(--soft)}
 canvas{display:block;touch-action:none;cursor:crosshair;max-width:none}
+.stage{touch-action:none}
 canvas.move{cursor:grab}
 canvas.text{cursor:text}
 .drop{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--red) 14%,transparent);
@@ -493,10 +494,11 @@ stage.addEventListener('wheel', e => {
   const d = Math.max(-60, Math.min(60, e.deltaY));
   setZoom(viewZoom * Math.exp(-d * 0.01), e.clientX, e.clientY);
 }, { passive: false });
-// スマホの2本指ピンチ（2本指ドラッグで移動も）
+// スマホの2本指ピンチ：画像エリアのどこでも反応（2本指ドラッグで移動も）
 const ptrs = new Map();
 let pinch = null, pinchLock = false;
-cv.addEventListener('pointerdown', e => {
+// 先に stage で受け取る（capture）ので、2本目の指が乗った瞬間に描画を止められる
+stage.addEventListener('pointerdown', e => {
   if (e.pointerType !== 'touch') return;
   ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (ptrs.size === 2){
@@ -506,8 +508,8 @@ cv.addEventListener('pointerdown', e => {
     pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: viewZoom, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
     pinchLock = true; render();
   }
-});
-cv.addEventListener('pointermove', e => {
+}, true);
+window.addEventListener('pointermove', e => {
   if (!ptrs.has(e.pointerId)) return;
   ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (!pinch || ptrs.size < 2) return;
@@ -516,14 +518,29 @@ cv.addEventListener('pointermove', e => {
   stage.scrollLeft -= mid.x - pinch.mid.x; stage.scrollTop -= mid.y - pinch.mid.y;
   pinch.mid = mid;
   setZoom(pinch.z0 * d / pinch.d0, mid.x, mid.y);
-});
+}, true);
 const pinchEnd = e => {
+  if (!ptrs.has(e.pointerId)) return;
   ptrs.delete(e.pointerId);
   if (ptrs.size < 2) pinch = null;
   if (ptrs.size === 0) pinchLock = false;
 };
-cv.addEventListener('pointerup', pinchEnd);
-cv.addEventListener('pointercancel', pinchEnd);
+window.addEventListener('pointerup', pinchEnd, true);
+window.addEventListener('pointercancel', pinchEnd, true);
+// Safari（iPhone/iPad/Mac）：画像エリアの上でのピンチだけ画像を拡大。それ以外は普段どおりページの拡大縮小
+let gest = null;
+const inStage = e => { const r = stage.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
+document.addEventListener('gesturestart', e => {
+  gest = ($('#studio').hidden && inStage(e)) ? { z0: viewZoom } : null;
+  if (gest) e.preventDefault();
+}, { passive: false });
+document.addEventListener('gesturechange', e => {
+  if (!gest) return;
+  e.preventDefault();
+  if (pinch || ptrs.size >= 2) return;   // タッチのピンチは上の処理に任せる
+  setZoom(gest.z0 * e.scale, e.clientX, e.clientY);
+}, { passive: false });
+document.addEventListener('gestureend', e => { if (gest) e.preventDefault(); gest = null; }, { passive: false });
 
 // ---------- pointer ----------
 function pos(e){ const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; }
@@ -705,9 +722,7 @@ document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase(), mod = e.metaKey || e.ctrlKey;
   if (mod && k === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if (mod && k === 'y'){ e.preventDefault(); redo(); return; }
-  if (mod && (e.key === '+' || e.key === '=' || e.key === ';')){ e.preventDefault(); setZoom(viewZoom * 1.25); return; }
-  if (mod && e.key === '-'){ e.preventDefault(); setZoom(viewZoom / 1.25); return; }
-  if (mod && e.key === '0'){ e.preventDefault(); viewZoom = 1; applyScale(); return; }
+  if (mod && e.key === '0'){ viewZoom = 1; applyScale(); return; }   // ブラウザの等倍リセットはそのまま効かせる
   if (mod) return;
   if (e.key === '+' || e.key === '='){ setZoom(viewZoom * 1.25); return; }
   if (e.key === '-'){ setZoom(viewZoom / 1.25); return; }
