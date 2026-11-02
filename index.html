@@ -107,6 +107,7 @@ canvas.text{cursor:text}
 .g-spd[hidden]{display:none!important}
 .g-spd{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
 .g-spd label{white-space:nowrap}
+.g-spd .chip{white-space:nowrap;flex:none}
 .g-spd input{width:150px;accent-color:var(--red)}
 .g-mos .mv{font-weight:400;white-space:nowrap}
 .g-mos input{width:150px;accent-color:var(--red)}
@@ -371,6 +372,7 @@ button{touch-action:manipulation}
   <div class="group g-spd" id="spdG" role="group" aria-label="集中線" hidden>
     <label for="spdN">本数</label>
     <input type="range" id="spdN" min="1" max="10" step="1" value="5">
+    <button class="chip" id="spdFull" type="button" title="線が出る外枠を画像全体に戻す">外枠を全体に</button>
   </div>
 
   <div class="group g-mos" id="mosG" role="group" aria-label="モザイクの粗さ" hidden>
@@ -645,12 +647,15 @@ function drawMosaic(c, o){
 }
 // ---------- 集中線 ----------
 // 丸で囲んだ範囲を空けて、そのまわりから画像全体へ放射状に広がる先の細い線
+// 線が出る外枠（四角）。決めていなければ画像全体
+const spdOut = o => o.out || [0, 0, cv.width, cv.height];
 function spdRect(o){ const x = Math.min(o.a[0], o.b[0]), y = Math.min(o.a[1], o.b[1]); return [x, y, Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])]; }
 function drawSpeed(c, o){
   const [x, y, w, h] = spdRect(o);
   const r = rng(o.seed || 1), cx = x + w / 2, cy = y + h / 2, rx = Math.max(2, w / 2), ry = Math.max(2, h / 2);
   const n = Math.round(40 + (o.dens || 5) * 26), far = Math.hypot(cv.width, cv.height) * 1.2;
-  c.save(); c.fillStyle = o.color;
+  const [ox0, oy0, ox1, oy1] = spdOut(o);
+  c.save(); c.beginPath(); c.rect(ox0, oy0, ox1 - ox0, oy1 - oy0); c.clip(); c.fillStyle = o.color;
   for (let i = 0; i < n; i++){
     const a = r() * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
     const t = 1 / Math.sqrt((ca / rx) ** 2 + (sa / ry) ** 2);   // 中心からこの向きに進んで丸の縁に当たる距離
@@ -733,6 +738,17 @@ function render(c = ctx, withSel = true){
     c.strokeStyle = '#1E6BFF';
     if (objs[sel].type === 'speed'){ c.beginPath(); c.ellipse((x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2, (y1 - y0) / 2, 0, 0, Math.PI * 2); c.stroke(); }
     else c.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    if (objs[sel].type === 'speed' && (tool === 'move' || tool === 'speed')){
+      const [qx0, qy0, qx1, qy1] = spdOut(objs[sel]), hs = 7 * u;
+      c.strokeStyle = '#FF8A00'; c.setLineDash([8 * u, 5 * u]); c.lineWidth = 2 * u;
+      c.strokeRect(qx0 + u, qy0 + u, qx1 - qx0 - 2 * u, qy1 - qy0 - 2 * u);
+      c.setLineDash([]); c.fillStyle = '#fff';
+      for (const [hx, hy] of [[qx0, qy0], [qx1, qy0], [qx1, qy1], [qx0, qy1]]){
+        const cx = Math.min(Math.max(hx, hs + u), cv.width - hs - u), cy = Math.min(Math.max(hy, hs + u), cv.height - hs - u);
+        c.fillRect(cx - hs, cy - hs, hs * 2, hs * 2); c.strokeRect(cx - hs, cy - hs, hs * 2, hs * 2);
+      }
+      c.strokeStyle = '#1E6BFF';
+    }
     const o = objs[sel];
     if (o.type === 'bubble' && o.tail && (tool === 'move' || tool === 'bubble')){
       c.setLineDash([]); c.fillStyle = '#fff'; c.lineWidth = 2 * u;
@@ -846,6 +862,7 @@ function pos(e){ const r = cv.getBoundingClientRect(); return { x: (e.clientX - 
 function translate(o, src, dx, dy){
   if (o.type === 'pen') o.pts = src.pts.map(([x, y]) => [x + dx, y + dy]);
   else if (o.type === 'text'){ o.x = src.x + dx; o.y = src.y + dy; }
+  else if (o.type === 'speed'){ o.a = [src.a[0] + dx, src.a[1] + dy]; o.b = [src.b[0] + dx, src.b[1] + dy]; if (src.out) o.out = [src.out[0] + dx, src.out[1] + dy, src.out[2] + dx, src.out[3] + dy]; }
   else if (o.type === 'bubble'){ o.x = src.x + dx; o.y = src.y + dy; if (src.tail) o.tail = [src.tail[0] + dx, src.tail[1] + dy]; }
   else { o.a = [src.a[0] + dx, src.a[1] + dy]; o.b = [src.b[0] + dx, src.b[1] + dy]; }
 }
@@ -854,6 +871,12 @@ cv.addEventListener('pointerdown', e => {
   if (editing){ commitText(); return; }
   const p = pos(e);
   // 選んでいる吹き出しのしっぽの先をつかんだら、しっぽだけ動かす
+  const so = objs[sel];
+  if ((tool === 'move' || tool === 'speed') && so && so.type === 'speed'){
+    const [qx0, qy0, qx1, qy1] = spdOut(so), cs = [[qx0, qy0], [qx1, qy0], [qx1, qy1], [qx0, qy1]];
+    const k = cs.findIndex(([hx, hy]) => Math.hypot(p.x - hx, p.y - hy) * scale < 24);
+    if (k >= 0){ drag = { i: sel, spdFix: cs[(k + 2) % 4], snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return; }
+  }
   const sb = objs[sel];
   if ((tool === 'move' || tool === 'bubble') && sb && sb.type === 'bubble' && sb.tail && Math.hypot(p.x - sb.tail[0], p.y - sb.tail[1]) * scale < 16){
     drag = { i: sel, tail: true, snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return;
@@ -895,6 +918,13 @@ cv.addEventListener('pointermove', e => {
   } else if (drag){
     const p = pos(e), dx = p.x - drag.start.x, dy = p.y - drag.start.y;
     if (Math.hypot(dx, dy) * scale > 2) drag.moved = true;
+    if (drag.spdFix){
+      if (drag.moved){
+        const [fx, fy] = drag.spdFix, x = Math.min(Math.max(p.x, 0), cv.width), y = Math.min(Math.max(p.y, 0), cv.height);
+        objs[drag.i].out = [Math.min(fx, x), Math.min(fy, y), Math.max(fx, x), Math.max(fy, y)]; render();
+      }
+      return;
+    }
     if (drag.tail){ if (drag.moved){ objs[drag.i].tail = [p.x, p.y]; render(); } return; }
     translate(objs[drag.i], drag.src, dx, dy); render();
   } else if (bubDrag){
@@ -1040,6 +1070,10 @@ let spdSnap = null;
     if (spdSnap !== null && spdSnap !== snapshot()){ undoS.push(spdSnap); redoS = []; }
     spdSnap = null; updateUI();
   });
+});
+$('#spdFull').addEventListener('click', () => {
+  const o = objs[sel];
+  if (o && o.type === 'speed' && o.out){ const before = snapshot(); delete o.out; undoS.push(before); redoS = []; render(); updateUI(); }
 });
 let mosSnap = null;
 $('#mosR').addEventListener('input', e => {
@@ -1288,7 +1322,7 @@ const LAYOUTS = {
 };
 const RATIOS = { '1:1': [1600,1600], '3:4': [1500,2000], '4:5': [1600,2000], '16:9': [1920,1080] };
 const GAPS = { none: ['なし', null], white: ['白', '#FFFFFF'], black: ['黒', '#111111'] };
-const col = { layout: 'g4', ratio: '1:1', gap: 'white', slots: [], sel: -1, free: [], fsel: -1 };
+const col = { layout: 'free', ratio: '1:1', gap: 'white', slots: [], sel: -1, free: [], fsel: -1 };
 let sScale = 1, sDrag = null, pendingSlot = null;
 
 function slotRects(W, H){
@@ -1924,6 +1958,7 @@ const tmp = document.createElement('canvas'); tmp.width = 1200; tmp.height = 960
 tmp.getContext('2d').fillStyle = '#1F2730'; tmp.getContext('2d').fillRect(0, 0, 1200, 960);
 setBase(tmp, true);
 buildSample();
+openStudio();   // 開いたら最初はコラージュ（フリー・1:1・背景白）から始める
 })();
 </script>
 <script>
