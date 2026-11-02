@@ -1,7 +1,7 @@
 {
-  "name": "赤ペンくん",
-  "short_name": "赤ペンくん",
-  "description": "画像に手書き風の赤い丸・矢印・文字を書き込めるツール",
+  "name": "赤ペンくん2.0",
+  "short_name": "赤ペンくん2.0",
+  "description": "画像に手書き風の丸・矢印・文字・吹き出し・モザイク・集中線を書き込めるツール",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",
@@ -9,8 +9,21 @@
   "background_color": "#111316",
   "theme_color": "#111316",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

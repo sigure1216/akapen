@@ -10,12 +10,12 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="赤ペンくん">
+<meta name="apple-mobile-web-app-title" content="赤ペンくん2.0">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>赤ペンくん</title>
+<title>赤ペンくん2.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Yomogi&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Yomogi&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Maru+Gothic:wght@700&family=Shippori+Mincho:wght@700&family=Mochiy+Pop+One&display=swap">
 <style>
 /* 作業台レイアウト：上に操作バー、中央に画像、下に道具箱。色は赤ペンだけが主役 */
 :root{
@@ -100,6 +100,27 @@ canvas.text{cursor:text}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
 .chip.hand{font-family:var(--font-hand);font-weight:400;font-size:14px}
 .chip.bold{font-family:"Dela Gothic One",var(--font-ui);font-weight:400}
+.chip.fit{background:var(--red);color:var(--on-red)}
+.chip.fit:hover{background:var(--red);color:var(--on-red);filter:brightness(1.08)}
+.g-curve[hidden],.g-font[hidden],.g-bub[hidden],.g-fin[hidden],.g-mos[hidden],.g-colors[hidden],.g-size[hidden]{display:none!important}
+.g-mos{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
+.g-spd[hidden]{display:none!important}
+.g-spd{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
+.g-spd label{white-space:nowrap}
+.g-spd input{width:150px;accent-color:var(--red)}
+.g-mos .mv{font-weight:400;white-space:nowrap}
+.g-mos input{width:150px;accent-color:var(--red)}
+.g-bub{gap:2px;padding:3px}
+.g-bub .chip{display:flex;align-items:center;gap:4px;padding:5px 8px}
+.g-bub .chip svg{width:18px;height:18px;flex:none}
+.g-font{gap:2px;padding:3px;overflow-x:auto;scrollbar-width:none}
+.g-font::-webkit-scrollbar{display:none}
+.g-font .chip{font-size:14px;white-space:nowrap;flex:none;padding:6px 9px}
+.g-curve{gap:2px;padding:2px 8px 2px 4px}
+.g-curve .chip{display:flex;align-items:center;gap:3px;padding:5px 8px}
+.g-curve .chip svg{width:18px;height:18px;flex:none}
+.g-curve label{font-size:11px;color:var(--muted);font-weight:700;margin:0 2px 0 4px;white-space:nowrap}
+.g-curve input{width:84px;accent-color:var(--red)}
 .spacer{flex:1}
 
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
@@ -154,7 +175,7 @@ canvas.text{cursor:text}
 
 /* 道具バーの並び（広い画面は従来どおり。順番だけ固定） */
 .trow{display:contents}
-.g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
+.g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
 .notice .short{display:none}
 #zPill{display:none}
 
@@ -176,7 +197,8 @@ canvas.text{cursor:text}
   .trow{display:flex;align-items:center;gap:6px}
   .trow.r2{flex-wrap:wrap}
   .g-tools,.g-edit{gap:0;padding:3px}
-  .tool{min-width:32px;width:32px;padding:5px 0}
+  .tool{min-width:26px;width:26px;padding:5px 0}
+  .g-tools,.g-edit{gap:1px}
   .tool .lb{display:none}
   .tool svg{width:21px;height:21px}
   .tools .spacer{display:block;flex:1;min-width:0}
@@ -187,6 +209,19 @@ canvas.text{cursor:text}
   .g-size label{display:none}
   .g-size input{width:100%;min-width:40px;flex:1}
   .g-fin{order:0;padding:2px}
+  .g-curve{order:0;padding:2px 6px 2px 2px;flex:1 1 150px;min-width:0}
+  .g-font{order:0;flex:1 1 100%;min-width:0;padding:2px}
+  .g-bub{order:0;padding:2px}
+  .g-mos{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
+  .g-spd{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
+  .g-spd input{flex:1;width:auto;min-width:40px}
+  .g-mos input{flex:1;width:auto;min-width:60px}
+  .g-bub .chip{padding:5px 7px}
+  .g-bub .chip span{display:none}
+  .g-font .chip{font-size:13px;padding:6px 8px}
+  .g-curve .chip{padding:5px 6px}
+  .g-curve .chip span,.g-curve label{display:none}
+  .g-curve input{flex:1;width:auto;min-width:50px}
   .chip{padding:6px 6px;font-size:12px;white-space:nowrap}
   .chip.hand{font-size:13px}
   #zPill{position:fixed;z-index:12;right:22px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
@@ -245,7 +280,7 @@ button{touch-action:manipulation}
 <body>
 
 <header>
-  <div class="logo"><b>赤ペンくん</b><span>画像に手書きで注釈</span></div>
+  <div class="logo"><b>赤ペンくん2.0</b><span>画像に手書きで注釈</span></div>
   <input type="file" id="file" accept="image/*" hidden>
   <button class="btn" id="openBtn" type="button" title="画像を開く">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
@@ -283,6 +318,12 @@ button{touch-action:manipulation}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 18C15 20 8 17 5 7"/><path d="M2.5 10.5L5 6.5l3.6 3"/></svg><span class="lb">矢印</span></button>
     <button class="tool" data-tool="text" type="button" title="文字 (T)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M12 6v13M9 19h6"/></svg><span class="lb">文字</span></button>
+    <button class="tool" data-tool="bubble" type="button" title="吹き出し (B)" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-7l-5 4v-4H6a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3z"/></svg><span class="lb">吹き出し</span></button>
+    <button class="tool" data-tool="speed" type="button" title="集中線 (L)" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 2.5l5 5M21.5 2.5l-5 5M2.5 21.5l5-5M21.5 21.5l-5-5M12 1.5v5M12 22.5v-5M1.5 12h5M22.5 12h-5"/></svg><span class="lb">集中線</span></button>
+    <button class="tool" data-tool="mosaic" type="button" title="モザイク (M)" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><rect x="3.75" y="9.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="15.75" y="9.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="9.75" y="3.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="9.75" y="15.75" width="4.5" height="4.5" rx=".8" opacity=".45"/></svg><span class="lb">モザイク</span></button>
     <button class="tool" data-tool="move" type="button" title="移動 (V)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><span class="lb">移動</span></button>
   </div>
@@ -319,8 +360,35 @@ button{touch-action:manipulation}
 
   <div class="group g-fin" role="group" aria-label="仕上げ">
     <button class="chip" id="olBtn" type="button" aria-pressed="false" title="白いフチを付けて背景から浮かせる">フチ</button>
-    <button class="chip hand" id="fHand" type="button" aria-pressed="true" hidden>手書き</button>
-    <button class="chip bold" id="fBold" type="button" aria-pressed="false" hidden>極太</button>
+  </div>
+
+  <div class="group g-bub" id="bubG" role="group" aria-label="吹き出しの形" hidden>
+    <button class="chip" data-shape="round" type="button" title="角丸"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 4h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-7l-5 4v-4H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/></svg><span>角丸</span></button>
+    <button class="chip" data-shape="oval" type="button" title="まる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8.2 17.6C4.6 16.5 2.5 13.9 2.5 11c0-4.1 4.3-7.5 9.5-7.5s9.5 3.4 9.5 7.5-4.3 7.5-9.5 7.5c-.9 0-1.8-.1-2.6-.3L4.5 21z"/></svg><span>まる</span></button>
+    <button class="chip" data-shape="burst" type="button" title="ギザギザ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5l1.8 3.3 3.6-1.6.2 3.9 3.9.6-1.9 3.4 2.4 2.9-3.8 1.1.1 3.9-3.6-1.4-2.1 3.3-1.9-3.4-3.7 1.3-.4-3.9-3.9-.9 2.3-3.1-1.6-3.6 3.9-.3.6-3.9 3.4 1.9z"/></svg><span>ギザギザ</span></button>
+  </div>
+
+  <div class="group g-spd" id="spdG" role="group" aria-label="集中線" hidden>
+    <label for="spdN">本数</label>
+    <input type="range" id="spdN" min="1" max="10" step="1" value="5">
+  </div>
+
+  <div class="group g-mos" id="mosG" role="group" aria-label="モザイクの粗さ" hidden>
+    <label for="mosR">粗さ</label>
+    <span class="mv">細かい</span>
+    <input type="range" id="mosR" min="1" max="10" step="1" value="5" aria-label="モザイクの粗さ">
+    <span class="mv">粗い</span>
+  </div>
+
+  <div class="group g-font" id="fontG" role="group" aria-label="文字のフォント" hidden></div>
+
+  <div class="group g-curve" id="curveG" role="group" aria-label="矢印の曲がり" hidden>
+    <button class="chip" id="cvL" type="button" aria-pressed="false" title="左カーブ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21C16 12 12.5 6.5 5 6"/><path d="M8.6 2.6L5 6l3.6 3.4"/></svg><span>左</span></button>
+    <button class="chip" id="cvR" type="button" aria-pressed="true" title="右カーブ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21C8 12 11.5 6.5 19 6"/><path d="M15.4 2.6L19 6l-3.6 3.4"/></svg><span>右</span></button>
+    <label for="bendR">曲がり</label>
+    <input type="range" id="bendR" min="0" max="60" step="1" value="16" aria-label="曲がり具合" title="曲がり具合（左端でまっすぐ）">
   </div>
 
   </div>
@@ -372,6 +440,7 @@ button{touch-action:manipulation}
     </div>
     <button class="btn primary" id="fAdd" type="button" hidden>＋ 画像を追加</button>
     <div class="group slotctl" id="freeCtl" hidden>
+      <button class="chip fit" id="fFit" type="button" title="選んだ画像を作業画面いっぱいに合わせる（まっすぐ・中央）">画面いっぱい</button>
       <label for="fSize">大きさ</label>
       <input type="range" id="fSize" min="0.03" max="2" step="0.01" value="0.5">
       <label for="fRot">回転</label>
@@ -411,11 +480,26 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage'), board = $('#board'), ta = $('#ta'), taok = $('#taok');
 
 const COLORS = [['赤','#E8262B'],['黄','#FFD400'],['白','#FFFFFF'],['黒','#111111'],['青','#1E6BFF']];
-const FONTS = { hand: '"Yomogi", "Klee One", cursive', bold: '"Dela Gothic One", "Hiragino Sans", sans-serif' };
+// 文字のフォント（n：ボタンの名前、f：書体、w：太さ）
+const FONTS = {
+  hand:   { n: '手書き',     f: '"Yomogi", "Klee One", cursive', w: 400 },
+  bold:   { n: '極太',       f: '"Dela Gothic One", "Hiragino Sans", sans-serif', w: 400 },
+  goth:   { n: 'ゴシック',   f: '"Zen Kaku Gothic New", "Hiragino Sans", sans-serif', w: 700 },
+  maru:   { n: '丸ゴシック', f: '"Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif', w: 700 },
+  mincho: { n: '明朝',       f: '"Shippori Mincho", "Hiragino Mincho ProN", serif', w: 700 },
+  pop:    { n: 'ポップ',     f: '"Mochiy Pop One", "Hiragino Maru Gothic ProN", sans-serif', w: 400 },
+};
+const fontOf = k => FONTS[k] || FONTS.hand;
 
 let base = document.createElement('canvas');
 let objs = [], undoS = [], redoS = [];
 let tool = 'circle', color = COLORS[0][1], size = 6, outline = false, font = 'hand';
+let spdN = 5;   // 集中線の本数（1〜10）
+let mosLv = 5;   // モザイクの粗さ（1〜10）
+const mosPx = lv => Math.max(3, Math.round(lv * 5 * unit()));   // 粗さ → 1マスの大きさ（画像のピクセル）
+let bubShape = 'round', bubDrag = null;   // 吹き出しの形（round / oval / burst）と、置くときのドラッグ
+const isTextLike = o => !!o && (o.type === 'text' || o.type === 'bubble');
+let curveDir = 1, curveAmt = 16;   // 矢印：1=右カーブ / -1=左カーブ、曲がり具合（0でまっすぐ）
 let sel = -1, drawing = null, drag = null, editing = null, scale = 1;
 
 // ---------- utilities ----------
@@ -425,7 +509,7 @@ const snapshot = () => JSON.stringify(objs);
 function pushUndo(s = snapshot()){ undoS.push(s); if (undoS.length > 120) undoS.shift(); redoS = []; updateUI(); }
 function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2400); }
 const olColor = c => c.toUpperCase() === '#FFFFFF' || c.toUpperCase() === '#FFD400' ? '#111111' : '#FFFFFF';
-const fontStr = o => `${o.size}px ${FONTS[o.font] || FONTS.hand}`;
+const fontStr = o => `${fontOf(o.font).w} ${o.size}px ${fontOf(o.font).f}`;
 
 // ---------- geometry ----------
 function ellipsePts(o){
@@ -443,12 +527,19 @@ function ellipsePts(o){
   }
   return pts;
 }
+// 曲がり（+で右カーブ、-で左カーブ。長さに対する割合）。前の版で描いた矢印は「上にふくらむ」のまま
+function arrowBend(o){
+  if (typeof o.bend === 'number') return o.bend;
+  const dx = o.b[0] - o.a[0], dy = o.b[1] - o.a[1];
+  let nx = -dy, ny = dx;
+  if (ny > 0 || (Math.abs(ny) < 1e-6 && nx < 0)) { nx = -nx; ny = -ny; }
+  return (nx * dy - ny * dx) >= 0 ? 0.16 : -0.16;
+}
 function arrowParts(o){
   const [x0, y0] = o.a, [x1, y1] = o.b;
   const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy) || 1;
-  let nx = -dy / len, ny = dx / len;
-  if (ny > 0 || (Math.abs(ny) < 1e-6 && nx < 0)) { nx = -nx; ny = -ny; }   // 上側にふくらませる
-  const bend = 0.16 * len;
+  const nx = dy / len, ny = -dx / len;   // 進む向きの左側。ここへふくらむと右カーブ
+  const bend = arrowBend(o) * len;
   const cx = (x0 + x1) / 2 + nx * bend, cy = (y0 + y1) / 2 + ny * bend;
   const shaft = [];
   for (let i = 0; i <= 32; i++){ const t = i / 32, u = 1 - t;
@@ -481,9 +572,108 @@ function textMetrics(c, o){
   const w = Math.max(...ls.map(l => c.measureText(l).width), o.size * 0.5);
   return { ls, w, h: ls.length * o.size * 1.25 };
 }
+// ---------- 吹き出し ----------
+// 本体の輪郭（文字のまわり）と、しっぽ（tail の点に向かう三角）
+function bubbleGeom(c, o){
+  const m = textMetrics(c, o), s = o.size;
+  const cx = o.x + m.w / 2, cy = o.y + m.h / 2;
+  let hw = m.w / 2 + s * 0.6, hh = m.h / 2 + s * 0.45, pts = null;
+  if (o.shape === 'oval'){ hw *= 1.36; hh *= 1.45; }
+  if (o.shape === 'burst'){
+    hw *= 1.42; hh *= 1.5;
+    const r = rng(o.seed || 7), n = Math.max(12, Math.min(22, Math.round((hw + hh) / s * 1.6)));
+    pts = [];
+    for (let i = 0; i < n * 2; i++){
+      const a = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2, out = i % 2 === 0;
+      const k = out ? 1.28 + r() * 0.16 : 1.0 + r() * 0.04;
+      pts.push([cx + Math.cos(a) * hw * k, cy + Math.sin(a) * hh * k]);
+    }
+  }
+  return { m, cx, cy, hw, hh, pts };
+}
+function bubbleBodyPath(c, o, g){
+  c.beginPath();
+  if (o.shape === 'oval'){ c.ellipse(g.cx, g.cy, g.hw, g.hh, 0, 0, Math.PI * 2); return; }
+  if (o.shape === 'burst'){ g.pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); return; }
+  const x = g.cx - g.hw, y = g.cy - g.hh, w = g.hw * 2, h = g.hh * 2, r = Math.min(h / 2, o.size * 0.7);
+  c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+function bubbleTailPath(c, o, g){
+  if (!o.tail) return false;
+  const dx = o.tail[0] - g.cx, dy = o.tail[1] - g.cy, d = Math.hypot(dx, dy);
+  if (d < Math.min(g.hw, g.hh) * 1.15) return false;   // しっぽの先が本体の中なら出さない
+  const ux = dx / d, uy = dy / d, bw = Math.min(g.hw, g.hh) * 0.58;
+  const bx = g.cx + ux * Math.min(g.hw, g.hh) * 0.3, by = g.cy + uy * Math.min(g.hw, g.hh) * 0.3;
+  c.beginPath(); c.moveTo(bx - uy * bw, by + ux * bw); c.lineTo(o.tail[0], o.tail[1]); c.lineTo(bx + uy * bw, by - ux * bw); c.closePath();
+  return true;
+}
+function drawBubble(c, o, withText = true){
+  const g = bubbleGeom(c, o), lw = Math.max(2, o.size * 0.16);
+  c.save(); c.lineJoin = 'round'; c.lineWidth = lw; c.strokeStyle = o.color; c.fillStyle = olColor(o.color);
+  bubbleBodyPath(c, o, g); c.stroke();
+  const hasTail = bubbleTailPath(c, o, g); if (hasTail) c.stroke();
+  bubbleBodyPath(c, o, g); c.fill();
+  if (hasTail){ bubbleTailPath(c, o, g); c.fill(); }
+  c.restore();
+  if (withText) drawTextLines(c, { ...o, ol: false });
+}
+function drawTextLines(c, o){
+  const { ls } = textMetrics(c, o);
+  c.textBaseline = 'top';
+  ls.forEach((l, i) => {
+    const y = o.y + i * o.size * 1.25 + o.size * 0.08;
+    if (o.ol){ c.strokeStyle = olColor(o.color); c.lineWidth = o.size * 0.2; c.strokeText(l, o.x, y); }
+    c.fillStyle = o.color; c.fillText(l, o.x, y);
+  });
+}
+// ---------- モザイク ----------
+// 元の画像だけを粗くして、その範囲に敷く（書き込みは上に残る）
+const mosTmp = document.createElement('canvas'), mosCtx = mosTmp.getContext('2d');
+function mosRect(o){
+  const x0 = Math.max(0, Math.min(o.a[0], o.b[0])), y0 = Math.max(0, Math.min(o.a[1], o.b[1]));
+  const x1 = Math.min(cv.width, Math.max(o.a[0], o.b[0])), y1 = Math.min(cv.height, Math.max(o.a[1], o.b[1]));
+  return [x0, y0, x1 - x0, y1 - y0];
+}
+function drawMosaic(c, o){
+  const [x, y, w, h] = mosRect(o); if (w < 1 || h < 1) return;
+  const bs = Math.max(2, o.px || 20), tw = Math.max(1, Math.round(w / bs)), th = Math.max(1, Math.round(h / bs));
+  mosTmp.width = tw; mosTmp.height = th;
+  mosCtx.imageSmoothingEnabled = true; mosCtx.imageSmoothingQuality = 'high';
+  mosCtx.drawImage(base, x, y, w, h, 0, 0, tw, th);
+  c.save(); c.imageSmoothingEnabled = false; c.drawImage(mosTmp, 0, 0, tw, th, x, y, w, h); c.restore();
+}
+// ---------- 集中線 ----------
+// 丸で囲んだ範囲を空けて、そのまわりから画像全体へ放射状に広がる先の細い線
+function spdRect(o){ const x = Math.min(o.a[0], o.b[0]), y = Math.min(o.a[1], o.b[1]); return [x, y, Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])]; }
+function drawSpeed(c, o){
+  const [x, y, w, h] = spdRect(o);
+  const r = rng(o.seed || 1), cx = x + w / 2, cy = y + h / 2, rx = Math.max(2, w / 2), ry = Math.max(2, h / 2);
+  const n = Math.round(40 + (o.dens || 5) * 26), far = Math.hypot(cv.width, cv.height) * 1.2;
+  c.save(); c.fillStyle = o.color;
+  for (let i = 0; i < n; i++){
+    const a = r() * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+    const t = 1 / Math.sqrt((ca / rx) ** 2 + (sa / ry) ** 2);   // 中心からこの向きに進んで丸の縁に当たる距離
+    const k = 1.02 + r() * r() * 0.9;   // 縁から少し離れたところから始めて、縁をぎざぎざに見せる
+    const ix = cx + ca * t * k, iy = cy + sa * t * k, ox = cx + ca * far, oy = cy + sa * far;
+    const wd = o.lw * (0.5 + r() * r() * 3.2);
+    const px = -sa * wd / 2, py = ca * wd / 2;
+    c.beginPath(); c.moveTo(ox + px * 2.2, oy + py * 2.2); c.lineTo(ix, iy); c.lineTo(ox - px * 2.2, oy - py * 2.2); c.closePath(); c.fill();
+  }
+  c.restore();
+}
 const fontWait = new Set();
 function drawObj(c, o){
   c.lineCap = 'round'; c.lineJoin = 'round';
+  if (o.type === 'speed'){ drawSpeed(c, o); return; }
+  if (o.type === 'mosaic'){ drawMosaic(c, o); return; }
+  if (o.type === 'bubble'){
+    const f = fontStr(o);
+    if (document.fonts && !document.fonts.check(f, o.text) && !fontWait.has(f + o.text)){
+      fontWait.add(f + o.text); document.fonts.load(f, o.text).then(() => render()).catch(() => {});
+    }
+    drawBubble(c, o); return;
+  }
   if (o.type === 'text'){
     const f = fontStr(o);
     if (document.fonts && !document.fonts.check(f, o.text) && !fontWait.has(f + o.text)){
@@ -503,6 +693,14 @@ function drawObj(c, o){
   c.strokeStyle = o.color; c.lineWidth = o.lw; for (const p of ps){ tracePath(c, p); c.stroke(); }
 }
 function bbox(o){
+  if (o.type === 'speed'){ const [x, y, w, h] = spdRect(o); return [x, y, x + w, y + h]; }
+  if (o.type === 'mosaic'){ const [x, y, w, h] = mosRect(o); return [x, y, x + w, y + h]; }
+  if (o.type === 'bubble'){
+    const g = bubbleGeom(ctx, o), k = o.shape === 'burst' ? 1.44 : 1, p = Math.max(2, o.size * 0.16) / 2;
+    let x0 = g.cx - g.hw * k - p, y0 = g.cy - g.hh * k - p, x1 = g.cx + g.hw * k + p, y1 = g.cy + g.hh * k + p;
+    if (o.tail){ x0 = Math.min(x0, o.tail[0]); y0 = Math.min(y0, o.tail[1]); x1 = Math.max(x1, o.tail[0]); y1 = Math.max(y1, o.tail[1]); }
+    return [x0, y0, x1, y1];
+  }
   if (o.type === 'text'){ const m = textMetrics(ctx, o); return [o.x, o.y, o.x + m.w, o.y + m.h]; }
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const p of lines(o)) for (const [x, y] of p){ x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
@@ -523,12 +721,23 @@ function hit(p, filter){
 function render(c = ctx, withSel = true){
   c.clearRect(0, 0, cv.width, cv.height);
   c.drawImage(base, 0, 0);
-  objs.forEach((o, i) => { if (!(editing && editing.idx === i && c === ctx)) drawObj(c, o); });
+  objs.forEach(o => { if (o.type === 'mosaic') drawObj(c, o); });
+  objs.forEach(o => { if (o.type === 'speed') drawObj(c, o); });   // 集中線は背景の効果なので、書き込みの下に敷く
+  objs.forEach((o, i) => { if (o.type !== 'mosaic' && o.type !== 'speed' && !(editing && editing.idx === i && c === ctx)) drawObj(c, o); });
   if (drawing && c === ctx) drawObj(c, drawing);
-  if (withSel && tool === 'move' && sel >= 0 && objs[sel]){
+  if (c === ctx && editing && editing.type === 'bubble') drawBubble(c, { ...editing, text: ta.value || '　　' }, false);
+  if (c === ctx && bubDrag && bubDrag.moved) drawBubble(c, bubPreview(bubDrag), true);
+  if (withSel && sel >= 0 && objs[sel]){
     const [x0, y0, x1, y1] = bbox(objs[sel]), u = 1 / scale;
     c.save(); c.setLineDash([6 * u, 5 * u]); c.lineWidth = 1.5 * u;
-    c.strokeStyle = '#1E6BFF'; c.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    c.strokeStyle = '#1E6BFF';
+    if (objs[sel].type === 'speed'){ c.beginPath(); c.ellipse((x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) / 2, (y1 - y0) / 2, 0, 0, Math.PI * 2); c.stroke(); }
+    else c.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    const o = objs[sel];
+    if (o.type === 'bubble' && o.tail && (tool === 'move' || tool === 'bubble')){
+      c.setLineDash([]); c.fillStyle = '#fff'; c.lineWidth = 2 * u;
+      c.beginPath(); c.arc(o.tail[0], o.tail[1], 7 * u, 0, Math.PI * 2); c.fill(); c.stroke();
+    }
     c.restore();
   }
 }
@@ -637,14 +846,26 @@ function pos(e){ const r = cv.getBoundingClientRect(); return { x: (e.clientX - 
 function translate(o, src, dx, dy){
   if (o.type === 'pen') o.pts = src.pts.map(([x, y]) => [x + dx, y + dy]);
   else if (o.type === 'text'){ o.x = src.x + dx; o.y = src.y + dy; }
+  else if (o.type === 'bubble'){ o.x = src.x + dx; o.y = src.y + dy; if (src.tail) o.tail = [src.tail[0] + dx, src.tail[1] + dy]; }
   else { o.a = [src.a[0] + dx, src.a[1] + dy]; o.b = [src.b[0] + dx, src.b[1] + dy]; }
 }
 cv.addEventListener('pointerdown', e => {
   if (pinchLock) return;
   if (editing){ commitText(); return; }
   const p = pos(e);
+  // 選んでいる吹き出しのしっぽの先をつかんだら、しっぽだけ動かす
+  const sb = objs[sel];
+  if ((tool === 'move' || tool === 'bubble') && sb && sb.type === 'bubble' && sb.tail && Math.hypot(p.x - sb.tail[0], p.y - sb.tail[1]) * scale < 16){
+    drag = { i: sel, tail: true, snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return;
+  }
+  if (tool === 'bubble'){
+    const i = hit(p, o => o.type === 'bubble');
+    if (i >= 0){ sel = -1; startText(objs[i], i); e.preventDefault(); return; }
+    sel = -1; bubDrag = { tip: p, at: p, moved: false }; cv.setPointerCapture(e.pointerId); render(); return;
+  }
   if (tool === 'text'){
-    const i = hit(p, o => o.type === 'text');
+    sel = -1;
+    const i = hit(p, isTextLike);
     if (i >= 0) startText(objs[i], i); else startText(null, -1, p);
     e.preventDefault(); return;
   }
@@ -653,9 +874,13 @@ cv.addEventListener('pointerdown', e => {
     if (sel >= 0){ drag = { i: sel, start: p, src: JSON.parse(JSON.stringify(objs[sel])), snap: snapshot(), moved: false }; cv.setPointerCapture(e.pointerId); syncFromSel(); }
     render(); updateUI(); return;
   }
+  sel = -1;
   cv.setPointerCapture(e.pointerId);
   const o = { type: tool, color, lw: size * unit(), ol: outline, seed: (Math.random() * 1e9) | 0 };
   if (tool === 'pen') o.pts = [[p.x, p.y]]; else { o.a = [p.x, p.y]; o.b = [p.x, p.y]; }
+  if (tool === 'arrow') o.bend = curveDir * curveAmt / 100;
+  if (tool === 'mosaic') o.px = mosPx(mosLv);
+  if (tool === 'speed') o.dens = spdN;
   drawing = o; render();
 });
 cv.addEventListener('pointermove', e => {
@@ -670,14 +895,40 @@ cv.addEventListener('pointermove', e => {
   } else if (drag){
     const p = pos(e), dx = p.x - drag.start.x, dy = p.y - drag.start.y;
     if (Math.hypot(dx, dy) * scale > 2) drag.moved = true;
+    if (drag.tail){ if (drag.moved){ objs[drag.i].tail = [p.x, p.y]; render(); } return; }
     translate(objs[drag.i], drag.src, dx, dy); render();
+  } else if (bubDrag){
+    bubDrag.at = pos(e);
+    if (Math.hypot(bubDrag.at.x - bubDrag.tip.x, bubDrag.at.y - bubDrag.tip.y) * scale > 12) bubDrag.moved = true;
+    render();
   }
 });
+// 指したいところ（しっぽの先）から、吹き出しを置きたいところへドラッグ。タップだけなら左下にしっぽ
+function bubPlace(b){
+  const fs = size * unit() * 6;
+  const at = b.moved ? b.at : b.tip;
+  const tail = b.moved ? [b.tip.x, b.tip.y] : [b.tip.x - fs * 0.9, b.tip.y + fs * 2.4];
+  return { x: at.x - fs * 1.1, y: at.y - fs * 0.62, tail, fs };
+}
+function bubPreview(b){
+  const q = bubPlace(b);
+  return { type: 'bubble', x: q.x, y: q.y, size: q.fs, font, color, ol: false, text: '……', tail: q.tail, shape: bubShape, seed: 7 };
+}
 function endPointer(){
+  if (bubDrag){
+    const q = bubPlace(bubDrag); bubDrag = null;
+    startText(null, -1, { x: q.x, y: q.y + q.fs * 0.6 }, { type: 'bubble', tail: q.tail, shape: bubShape, seed: (Math.random() * 1e9) | 0 });
+    return;
+  }
   if (drawing){
     const o = drawing; drawing = null;
-    const ok = o.type === 'pen' || Math.hypot(o.b[0] - o.a[0], o.b[1] - o.a[1]) * scale > 8;
-    if (ok){ pushUndo(); objs.push(o); }
+    if (o.type === 'speed' && Math.min(Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])) * scale <= 6){   // タップだけなら、そこを中心に少し空ける
+      const rx = cv.width * 0.14, ry = cv.height * 0.14; o.b = [o.a[0] + rx, o.a[1] + ry]; o.a = [o.a[0] - rx, o.a[1] - ry];
+    }
+    const ok = o.type === 'pen' || o.type === 'speed' || (o.type === 'mosaic'
+      ? Math.min(Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])) * scale > 6
+      : Math.hypot(o.b[0] - o.a[0], o.b[1] - o.a[1]) * scale > 8);
+    if (ok){ pushUndo(); objs.push(o); sel = objs.length - 1; }   // 描いた直後のものは、そのまま太さ（矢印は曲がりも）を調整できる
     render(); updateUI();
   }
   if (drag){ if (drag.moved){ undoS.push(drag.snap); redoS = []; } drag = null; updateUI(); }
@@ -686,9 +937,12 @@ cv.addEventListener('pointerup', endPointer);
 cv.addEventListener('pointercancel', endPointer);
 
 // ---------- text ----------
-function startText(o, idx, p){
+function startText(o, idx, p, extra){
   editing = o ? { idx, x: o.x, y: o.y, size: o.size, font: o.font, color: o.color, ol: o.ol, text: o.text }
               : { idx: -1, x: p.x, y: p.y - size * unit() * 6 * 0.6, size: size * unit() * 6, font, color, ol: outline, text: '' };
+  if (o && o.type === 'bubble') Object.assign(editing, { type: 'bubble', tail: o.tail, shape: o.shape, seed: o.seed });
+  if (!o && extra) Object.assign(editing, extra, { ol: false });
+  if (o && o.type === 'bubble') bubShape = o.shape || 'round';
   if (o){ color = o.color; font = o.font; outline = o.ol; size = Math.round(o.size / unit() / 6) || size; syncControls(); }
   ta.value = editing.text; ta.hidden = false; taok.hidden = false;
   placeEditor(); render();
@@ -700,10 +954,11 @@ function placeEditor(){
   ta.style.left = editing.x * s - 3 + 'px';
   ta.style.top = editing.y * s - 2 + 'px';
   ta.style.fontSize = fs + 'px';
-  ta.style.fontFamily = FONTS[editing.font];
+  ta.style.fontFamily = fontOf(editing.font).f;
+  ta.style.fontWeight = fontOf(editing.font).w;
   ta.style.color = editing.color;
   ta.style.webkitTextStroke = editing.ol ? `${Math.max(0.5, fs * 0.06)}px ${olColor(editing.color)}` : '0';
-  ctx.font = `${fs}px ${FONTS[editing.font]}`;
+  ctx.font = `${fontOf(editing.font).w} ${fs}px ${fontOf(editing.font).f}`;
   const ls = (ta.value || ' ').split('\n');
   const w = Math.max(...ls.map(l => ctx.measureText(l || ' ').width)) + fs * 0.8;
   const bw = board.clientWidth;
@@ -712,7 +967,7 @@ function placeEditor(){
   taok.style.left = Math.min(editing.x * s, Math.max(0, bw - 60)) + 'px';
   taok.style.top = Math.max(34, editing.y * s - 4) + 'px';
 }
-ta.addEventListener('input', placeEditor);
+ta.addEventListener('input', () => { placeEditor(); if (editing && editing.type === 'bubble') render(); });
 ta.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); commitText(); }
   if (e.key === 'Escape'){ e.preventDefault(); cancelText(); }
@@ -724,13 +979,15 @@ function commitText(){
   if (!editing) return;
   const v = ta.value.replace(/\s+$/, '');
   const e = editing;
-  const obj = { type: 'text', x: e.x, y: e.y, size: e.size, font: e.font, color: e.color, ol: e.ol, text: v };
+  const obj = { type: e.type || 'text', x: e.x, y: e.y, size: e.size, font: e.font, color: e.color, ol: e.ol, text: v };
+  if (obj.type === 'bubble'){ obj.ol = false; obj.tail = e.tail; obj.shape = e.shape || 'round'; obj.seed = e.seed || 7; }
   if (e.idx >= 0){
     const old = objs[e.idx];
     if (!v){ pushUndo(); objs.splice(e.idx, 1); }
     else if (JSON.stringify(old) !== JSON.stringify(obj)){ pushUndo(); objs[e.idx] = obj; }
-  } else if (v){ pushUndo(); objs.push(obj); }
-  closeEditor();
+    sel = v ? e.idx : -1;
+  } else if (v){ pushUndo(); objs.push(obj); sel = objs.length - 1; }
+  closeEditor();   // 書いた直後の文字は、そのまま大きさを調整できる
 }
 
 // ---------- controls ----------
@@ -742,10 +999,86 @@ COLORS.forEach(([name, c]) => {
   colorBox.appendChild(b);
 });
 document.querySelectorAll('[data-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
-$('#sizeR').addEventListener('input', e => { size = +e.target.value; applyStyle(); });
+// 太さ：移動で選んだもの、または矢印の道具で描いた直後の矢印を、スライダーを動かしながらその場で変える
+let sizeSnap = null;
+$('#sizeR').addEventListener('input', e => {
+  size = +e.target.value;
+  const o = editing ? null : (objs[sel] || null);
+  if (!o){ applyStyle(); return; }
+  if (sizeSnap === null) sizeSnap = snapshot();
+  if (isTextLike(o)) o.size = size * unit() * 6; else o.lw = size * unit();
+  render(); syncControls();
+});
+$('#sizeR').addEventListener('change', () => {
+  if (sizeSnap !== null && sizeSnap !== snapshot()){ undoS.push(sizeSnap); redoS = []; }
+  sizeSnap = null; updateUI();
+});
 $('#olBtn').addEventListener('click', () => { outline = !outline; applyStyle(); });
-$('#fHand').addEventListener('click', () => { font = 'hand'; applyStyle(); });
-$('#fBold').addEventListener('click', () => { font = 'bold'; applyStyle(); });
+const fontBox = $('#fontG');
+Object.entries(FONTS).forEach(([k, d]) => {
+  const b = document.createElement('button');
+  b.className = 'chip'; b.type = 'button'; b.dataset.font = k; b.textContent = d.n; b.title = d.n;
+  b.style.fontFamily = d.f; b.style.fontWeight = d.w;
+  b.addEventListener('click', () => setFont(k));
+  fontBox.appendChild(b);
+});
+// 吹き出しの形：書いている途中・書いた直後・選んだ吹き出しは、押すとその場で変わる
+document.querySelectorAll('#bubG .chip').forEach(b => b.addEventListener('click', () => {
+  bubShape = b.dataset.shape;
+  if (editing && editing.type === 'bubble'){ editing.shape = bubShape; render(); }
+  else { const o = objs[sel]; if (o && o.type === 'bubble' && o.shape !== bubShape){ const before = snapshot(); o.shape = bubShape; undoS.push(before); redoS = []; render(); } }
+  syncControls(); updateUI();
+}));
+let spdSnap = null;
+['spdN'].forEach(id => {
+  $('#' + id).addEventListener('input', e => {
+    spdN = +e.target.value;
+    const o = objs[sel];
+    if (o && o.type === 'speed'){ if (spdSnap === null) spdSnap = snapshot(); o.dens = spdN; render(); }
+  });
+  $('#' + id).addEventListener('change', () => {
+    if (spdSnap !== null && spdSnap !== snapshot()){ undoS.push(spdSnap); redoS = []; }
+    spdSnap = null; updateUI();
+  });
+});
+let mosSnap = null;
+$('#mosR').addEventListener('input', e => {
+  mosLv = +e.target.value;
+  const o = objs[sel];
+  if (o && o.type === 'mosaic'){ if (mosSnap === null) mosSnap = snapshot(); o.px = mosPx(mosLv); render(); }
+});
+$('#mosR').addEventListener('change', () => {
+  if (mosSnap !== null && mosSnap !== snapshot()){ undoS.push(mosSnap); redoS = []; }
+  mosSnap = null; updateUI();
+});
+function setFont(k){
+  font = k;
+  if (editing){ applyStyle(); return; }
+  const o = objs[sel];
+  if (isTextLike(o) && o.font !== k){ const before = snapshot(); o.font = k; undoS.push(before); redoS = []; render(); }
+  syncControls(); updateUI();
+}
+// 曲がりを変える対象：移動で選んだ矢印か、矢印の道具で描いた直後の矢印
+const curveTarget = () => (tool === 'move' || tool === 'arrow') && objs[sel] && objs[sel].type === 'arrow' ? objs[sel] : null;
+function setCurveDir(d){
+  curveDir = d;
+  const o = curveTarget();
+  if (o){ const before = snapshot(); o.bend = curveDir * curveAmt / 100; if (before !== snapshot()){ undoS.push(before); redoS = []; } render(); }
+  syncControls(); updateUI();
+}
+$('#cvL').addEventListener('click', () => setCurveDir(-1));
+$('#cvR').addEventListener('click', () => setCurveDir(1));
+// スライダーはドラッグ中も形を見せ、離したときに1回分だけ「戻す」に積む
+let bendSnap = null;
+$('#bendR').addEventListener('input', e => {
+  curveAmt = +e.target.value;
+  const o = curveTarget();
+  if (o){ if (bendSnap === null) bendSnap = snapshot(); o.bend = curveDir * curveAmt / 100; render(); }
+});
+$('#bendR').addEventListener('change', () => {
+  if (bendSnap !== null && bendSnap !== snapshot()){ undoS.push(bendSnap); redoS = []; }
+  bendSnap = null; updateUI();
+});
 
 function applyStyle(){
   if (editing){
@@ -754,7 +1087,16 @@ function applyStyle(){
   } else if (tool === 'move' && sel >= 0){
     const o = objs[sel], before = snapshot();
     o.color = color; o.ol = outline;
-    if (o.type === 'text'){ o.font = font; o.size = size * unit() * 6; } else o.lw = size * unit();
+    if (isTextLike(o)){ o.font = font; o.size = size * unit() * 6; } else o.lw = size * unit();
+    if (o.type === 'bubble') o.ol = false;
+    if (o.type === 'arrow') o.bend = curveDir * curveAmt / 100;
+    if (before !== snapshot()){ undoS.push(before); redoS = []; }
+    render();
+  } else if (sel >= 0 && objs[sel] && objs[sel].type !== 'mosaic'){
+    // 描いた直後のもの（点線の枠）は、色とフチをその場で変える
+    const o = objs[sel], before = snapshot();
+    o.color = color;
+    if (o.type !== 'bubble' && o.type !== 'speed') o.ol = outline;
     if (before !== snapshot()){ undoS.push(before); redoS = []; }
     render();
   }
@@ -763,7 +1105,11 @@ function applyStyle(){
 function syncFromSel(){
   const o = objs[sel]; if (!o) return;
   color = o.color; outline = !!o.ol;
-  if (o.type === 'text'){ font = o.font; size = Math.round(o.size / unit() / 6); } else size = Math.round(o.lw / unit());
+  if (o.type === 'bubble' && o.shape) bubShape = o.shape;
+  if (o.type === 'speed'){ spdN = o.dens || 5; $('#spdN').value = spdN; }
+  if (o.type === 'mosaic'){ mosLv = Math.min(10, Math.max(1, Math.round((o.px || 20) / (5 * unit())))); $('#mosR').value = mosLv; }
+  if (isTextLike(o)){ font = o.font; size = Math.round(o.size / unit() / 6); } else size = Math.round(o.lw / unit());
+  if (o.type === 'arrow'){ const b = arrowBend(o); curveDir = b < 0 ? -1 : 1; curveAmt = Math.min(60, Math.round(Math.abs(b) * 100)); }
   size = Math.min(20, Math.max(2, size || 6));
   syncControls();
 }
@@ -771,8 +1117,11 @@ function syncControls(){
   document.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === color)));
   $('#sizeR').value = size;
   $('#olBtn').setAttribute('aria-pressed', String(outline));
-  $('#fHand').setAttribute('aria-pressed', String(font === 'hand'));
-  $('#fBold').setAttribute('aria-pressed', String(font === 'bold'));
+  fontBox.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.font === font)));
+  document.querySelectorAll('#bubG .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.shape === bubShape)));
+  $('#cvL').setAttribute('aria-pressed', String(curveDir < 0));
+  $('#cvR').setAttribute('aria-pressed', String(curveDir > 0));
+  $('#bendR').value = curveAmt;
   const d = $('#dotPreview'), px = Math.max(3, Math.min(24, size * 1.15));
   d.style.width = d.style.height = px + 'px'; d.style.background = color;
   d.style.boxShadow = (outline || color === '#FFFFFF') ? `0 0 0 ${outline ? 3 : 1}px ${olColor(color) === '#FFFFFF' ? '#fff' : '#111'}${outline ? '' : '55'}` : 'none';
@@ -790,8 +1139,17 @@ function updateUI(){
   $('#redoBtn').disabled = !redoS.length;
   $('#delBtn').disabled = !(tool === 'move' && sel >= 0);
   $('#clearBtn').disabled = !objs.length;
-  const textCtx = tool === 'text' || editing || (tool === 'move' && objs[sel] && objs[sel].type === 'text');
-  $('#fHand').hidden = $('#fBold').hidden = !textCtx;
+  const textCtx = tool === 'text' || tool === 'bubble' || editing || isTextLike(objs[sel]);
+  $('#fontG').hidden = !textCtx;
+  const bubCtx = tool === 'bubble' || (editing && editing.type === 'bubble') || (objs[sel] && objs[sel].type === 'bubble');
+  $('#bubG').hidden = !bubCtx;
+  const mosCtxOn = tool === 'mosaic' || (objs[sel] && objs[sel].type === 'mosaic');
+  $('#mosG').hidden = !mosCtxOn;
+  const spdCtx = tool === 'speed' || (objs[sel] && objs[sel].type === 'speed');
+  $('#spdG').hidden = !spdCtx;
+  document.querySelector('.g-fin').hidden = !!bubCtx || mosCtxOn || spdCtx;   // 吹き出し・モザイクにはフチを使わないので隠す
+  document.querySelector('.g-colors').hidden = document.querySelector('.g-size').hidden = mosCtxOn;   // モザイクは色・太さを使わない
+  $('#curveG').hidden = !(tool === 'arrow' || (tool === 'move' && objs[sel] && objs[sel].type === 'arrow'));
   document.querySelector('label[for="sizeR"]').textContent = textCtx ? '大きさ' : '太さ';
 }
 function undo(){ if (editing) cancelText(); if (!undoS.length) return; redoS.push(snapshot()); objs = JSON.parse(undoS.pop()); sel = -1; render(); updateUI(); }
@@ -818,9 +1176,10 @@ document.addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '='){ setZoom(viewZoom * 1.25); return; }
   if (e.key === '-'){ setZoom(viewZoom / 1.25); return; }
   if (e.key === '0'){ viewZoom = 1; applyScale(); return; }
-  const map ={ p: 'pen', o: 'circle', a: 'arrow', t: 'text', v: 'move' };
+  const map ={ p: 'pen', o: 'circle', a: 'arrow', t: 'text', b: 'bubble', l: 'speed', m: 'mosaic', v: 'move' };
   if (map[k]) setTool(map[k]);
   if ((e.key === 'Delete' || e.key === 'Backspace') && tool === 'move' && sel >= 0){ e.preventDefault(); delSel(); }
+  if (e.key === 'Escape' && tool !== 'move' && sel >= 0){ sel = -1; render(); updateUI(); }
 });
 
 // ---------- image loading ----------
@@ -1419,6 +1778,14 @@ $('#fDup').addEventListener('click', () => {
   col.free.push({ ...it, x: it.x + 0.04, y: it.y + 0.04 }); col.fsel = col.free.length - 1; renderStudio();
 });
 $('#fDel').addEventListener('click', freeRemove);
+// 選んだ画像を、はみ出さない最大の大きさで作業画面の中央にまっすぐ置く（1:1の画像なら画面ぴったり）
+$('#fFit').addEventListener('click', () => {
+  const it = col.free[col.fsel]; if (!it) return;
+  const iw = it.img.naturalWidth || it.img.width, ih = it.img.naturalHeight || it.img.height;
+  it.w = Math.min(1, (sc.height * iw) / (sc.width * ih));
+  it.x = 0.5; it.y = 0.5; it.rot = 0;
+  renderStudio();
+});
 $('#fAdd').addEventListener('click', () => openPad(null));
 
 // ---------- 貼り付け枠（コラージュのマス用） ----------
