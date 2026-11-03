@@ -950,6 +950,7 @@ function translate(o, src, dx, dy){
 }
 cv.addEventListener('pointerdown', e => {
   if (pinchLock) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;   // マウスは左ボタンだけで描く
   if (editing){ commitText(); return; }
   const p = pos(e);
   // 選んでいる吹き出しのしっぽの先をつかんだら、しっぽだけ動かす
@@ -1008,6 +1009,8 @@ cv.addEventListener('pointerdown', e => {
 });
 cv.addEventListener('pointermove', e => {
   if (pinchLock) return;
+  // 左ボタンを離しているのに描き続けていたら（画面の外で離したときなど）、そこで終わらせる
+  if (e.pointerType === 'mouse' && !(e.buttons & 1) && (drawing || drag || bubDrag)){ endPointer(); return; }
   if (tool === 'erase'){ hoverP = pos(e); if (!drawing) render(); }
   if (drawing){
     const p = pos(e);
@@ -1089,6 +1092,9 @@ function endPointer(){
 cv.addEventListener('pointerup', endPointer);
 cv.addEventListener('pointerleave', () => { if (tool === 'erase' && !drawing){ hoverP = null; render(); } });
 cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('lostpointercapture', endPointer);
+window.addEventListener('blur', endPointer);
+cv.addEventListener('contextmenu', e => { if (drawing) e.preventDefault(); });
 
 // ---------- text ----------
 function startText(o, idx, p, extra){
