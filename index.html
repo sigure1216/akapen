@@ -104,7 +104,12 @@ canvas.text{cursor:text}
 .chip.fit:hover{background:var(--red);color:var(--on-red);filter:brightness(1.08)}
 .g-curve[hidden],.g-font[hidden],.g-bub[hidden],.g-fin[hidden],.g-mos[hidden],.g-colors[hidden],.g-size[hidden]{display:none!important}
 .g-mos{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
-.g-spd[hidden],.g-ers[hidden]{display:none!important}
+.g-spd[hidden],.g-ers[hidden],.g-stp[hidden]{display:none!important}
+.g-stp{gap:6px;padding:3px 10px 3px 3px;font-size:11px;color:var(--muted)}
+.g-stp .chip{white-space:nowrap;flex:none}
+.g-stp .chip:disabled{opacity:.4;cursor:default}
+.g-stp .stp-hint{white-space:nowrap}
+.g-stp .chip[hidden]{display:none}
 .g-ers{gap:8px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
 .g-ers label{white-space:nowrap}
 .g-ers .dot{width:30px;height:30px}
@@ -181,7 +186,7 @@ canvas.text{cursor:text}
 
 /* 道具バーの並び（広い画面は従来どおり。順番だけ固定） */
 .trow{display:contents}
-.g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-ers{order:4}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
+.g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-ers{order:4}.g-stp{order:4}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
 .notice .short{display:none}
 #zPill{display:none}
 
@@ -203,7 +208,7 @@ canvas.text{cursor:text}
   .trow{display:flex;align-items:center;gap:6px}
   .trow.r2{flex-wrap:wrap}
   .g-tools,.g-edit{gap:0;padding:3px}
-  .tool{min-width:24px;width:24px;padding:5px 0}
+  .tool{min-width:22px;width:22px;padding:5px 0}
   .tool svg{width:20px!important;height:20px!important}
   .g-tools,.g-edit{gap:1px}
   .tool .lb{display:none}
@@ -222,6 +227,8 @@ canvas.text{cursor:text}
   .g-mos{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
   .g-spd{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
   .g-ers{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
+  .g-stp{order:0;flex:1 1 auto;min-width:0}
+  .g-stp .stp-hint{display:none}
   .g-ers input{flex:1;width:auto;min-width:60px}
   .g-spd input{flex:1;width:auto;min-width:40px}
   .g-mos input{flex:1;width:auto;min-width:60px}
@@ -335,6 +342,8 @@ button{touch-action:manipulation}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 2.5l5 5M21.5 2.5l-5 5M2.5 21.5l5-5M21.5 21.5l-5-5M12 1.5v5M12 22.5v-5M1.5 12h5M22.5 12h-5"/></svg><span class="lb">集中線</span></button>
     <button class="tool" data-tool="mosaic" type="button" title="モザイク (M)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><rect x="3.75" y="9.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="15.75" y="9.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="9.75" y="3.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="9.75" y="15.75" width="4.5" height="4.5" rx=".8" opacity=".45"/></svg><span class="lb">モザイク</span></button>
+    <button class="tool" data-tool="stamp" type="button" title="スタンプ (S)" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="8" width="12" height="12" rx="1.5"/><path d="M8 8V5.5A1.5 1.5 0 0 1 9.5 4H19.5A1.5 1.5 0 0 1 21 5.5V15.5A1.5 1.5 0 0 1 19.5 17H15"/></svg><span class="lb">スタンプ</span></button>
     <button class="tool" data-tool="move" type="button" title="移動 (V)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 1.5L10 19z"/></svg><span class="lb">移動</span></button>
   </div>
@@ -377,6 +386,14 @@ button{touch-action:manipulation}
     <button class="chip" data-shape="round" type="button" title="角丸"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 4h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-7l-5 4v-4H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/></svg><span>角丸</span></button>
     <button class="chip" data-shape="oval" type="button" title="まる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8.2 17.6C4.6 16.5 2.5 13.9 2.5 11c0-4.1 4.3-7.5 9.5-7.5s9.5 3.4 9.5 7.5-4.3 7.5-9.5 7.5c-.9 0-1.8-.1-2.6-.3L4.5 21z"/></svg><span>まる</span></button>
     <button class="chip" data-shape="burst" type="button" title="ギザギザ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5l1.8 3.3 3.6-1.6.2 3.9 3.9.6-1.9 3.4 2.4 2.9-3.8 1.1.1 3.9-3.6-1.4-2.1 3.3-1.9-3.4-3.7 1.3-.4-3.9-3.9-.9 2.3-3.1-1.6-3.6 3.9-.3.6-3.9 3.4 1.9z"/></svg><span>ギザギザ</span></button>
+  </div>
+
+  <div class="group g-stp" id="stpG" role="group" aria-label="スタンプ" hidden>
+    <button class="chip fit" id="stpAdd" type="button" title="今の画像の小さいコピーを置く">画像のコピーを置く</button>
+    <button class="chip" id="stpDup" type="button" title="選んだスタンプを同じ大きさで増やす">複製</button>
+    <button class="chip" id="stpCrop" type="button" aria-pressed="false" title="選んだスタンプの切り取る範囲を決める">トリミング</button>
+    <button class="chip" id="stpCropReset" type="button" hidden title="切り取りをやめて画像全体に戻す">切り取りを戻す</button>
+    <span class="stp-hint" id="stpHint">四隅の□で大きさを変えられます</span>
   </div>
 
   <div class="group g-ers" id="ersG" role="group" aria-label="消しゴムの大きさ" hidden>
@@ -512,6 +529,8 @@ const fontOf = k => FONTS[k] || FONTS.hand;
 let base = document.createElement('canvas');
 let objs = [], undoS = [], redoS = [];
 let tool = 'circle', color = COLORS[0][1], size = 6, outline = false, font = 'hand';
+let cropMode = false;   // スタンプのトリミング中
+const stampImgs = {}; let stampSeq = 0, baseStampId = null;   // baseStampId：今の画像のコピー（画像を差し替えたら作り直す）   // スタンプの画像（戻すの記録には番号だけ残す）
 let ersLv = 4, hoverP = null;   // 消しゴムの大きさ（1〜10）、消しゴムの丸を出す位置
 const ersPx = lv => Math.max(4, Math.round(lv * 9 * unit()));   // 大きさ → 消す幅（画像のピクセル）
 let spdN = 5;   // 集中線の本数（1〜10）
@@ -689,6 +708,12 @@ const fontWait = new Set();
 function drawObj(c, o){
   c.lineCap = 'round'; c.lineJoin = 'round';
   if (o.type === 'speed'){ drawSpeed(c, o); return; }
+  if (o.type === 'stamp'){
+    const im = stampImgs[o.img]; if (!im) return;
+    if (o.ol){ const f = Math.max(2, Math.min(o.w, o.h) * 0.03); c.fillStyle = '#fff'; c.fillRect(o.x - f, o.y - f, o.w + f * 2, o.h + f * 2); }
+    const cr = o.crop || [0, 0, 1, 1], iw = im.width, ih = im.height;
+    c.drawImage(im, cr[0] * iw, cr[1] * ih, (cr[2] - cr[0]) * iw, (cr[3] - cr[1]) * ih, o.x, o.y, o.w, o.h); return;
+  }
   if (o.type === 'mosaic'){ drawMosaic(c, o); return; }
   if (o.type === 'bubble'){
     const f = fontStr(o);
@@ -718,6 +743,7 @@ function drawObj(c, o){
 function bbox(o){
   if (o.type === 'speed'){ const [x, y, w, h] = spdRect(o); return [x, y, x + w, y + h]; }
   if (o.type === 'mosaic'){ const [x, y, w, h] = mosRect(o); return [x, y, x + w, y + h]; }
+  if (o.type === 'stamp'){ const f = o.ol ? Math.max(2, Math.min(o.w, o.h) * 0.03) : 0; return [o.x - f, o.y - f, o.x + o.w + f, o.y + o.h + f]; }
   if (o.type === 'bubble'){
     const g = bubbleGeom(ctx, o), k = o.shape === 'burst' ? 1.44 : 1, p = Math.max(2, o.size * 0.16) / 2;
     let x0 = g.cx - g.hw * k - p, y0 = g.cy - g.hh * k - p, x1 = g.cx + g.hw * k + p, y1 = g.cy + g.hh * k + p;
@@ -791,6 +817,20 @@ function render(c = ctx, withSel = true){
       c.strokeStyle = '#1E6BFF';
     }
     const o = objs[sel];
+    if (o.type === 'stamp' && (tool === 'move' || tool === 'stamp') && cropMode){
+      const g = cropGeom(o), im = stampImgs[o.img];
+      if (im){
+        c.save(); c.beginPath(); c.rect(g.fl, g.ft, g.Wf, g.Hf); c.rect(o.x, o.y, o.w, o.h); c.clip('evenodd');
+        c.globalAlpha = 0.35; c.drawImage(im, g.fl, g.ft, g.Wf, g.Hf); c.restore();
+        c.save(); c.setLineDash([4 * u, 4 * u]); c.lineWidth = 1 * u; c.strokeStyle = '#FF8A00'; c.strokeRect(g.fl, g.ft, g.Wf, g.Hf); c.restore();
+      }
+      c.setLineDash([]); c.fillStyle = '#fff'; c.lineWidth = 2.5 * u; c.strokeStyle = '#FF8A00'; c.strokeRect(o.x, o.y, o.w, o.h);
+      const hs = 8 * u;
+      for (const [hx, hy] of cropHandles(o)){ c.fillRect(hx - hs, hy - hs, hs * 2, hs * 2); c.strokeRect(hx - hs, hy - hs, hs * 2, hs * 2); }
+    } else if (o.type === 'stamp' && (tool === 'move' || tool === 'stamp')){
+      const hs = 8 * u; c.setLineDash([]); c.fillStyle = '#fff'; c.lineWidth = 2 * u; c.strokeStyle = '#1E6BFF';
+      for (const [hx, hy] of [[o.x, o.y], [o.x + o.w, o.y], [o.x + o.w, o.y + o.h], [o.x, o.y + o.h]]){ c.fillRect(hx - hs, hy - hs, hs * 2, hs * 2); c.strokeRect(hx - hs, hy - hs, hs * 2, hs * 2); }
+    }
     if (o.type === 'bubble' && o.tail && (tool === 'move' || tool === 'bubble')){
       c.setLineDash([]); c.fillStyle = '#fff'; c.lineWidth = 2 * u;
       c.beginPath(); c.arc(o.tail[0], o.tail[1], 7 * u, 0, Math.PI * 2); c.fill(); c.stroke();
@@ -903,6 +943,7 @@ function pos(e){ const r = cv.getBoundingClientRect(); return { x: (e.clientX - 
 function translate(o, src, dx, dy){
   if (o.type === 'pen') o.pts = src.pts.map(([x, y]) => [x + dx, y + dy]);
   else if (o.type === 'text'){ o.x = src.x + dx; o.y = src.y + dy; }
+  else if (o.type === 'stamp'){ o.x = src.x + dx; o.y = src.y + dy; }
   else if (o.type === 'speed'){ o.a = [src.a[0] + dx, src.a[1] + dy]; o.b = [src.b[0] + dx, src.b[1] + dy]; if (src.out) o.out = [src.out[0] + dx, src.out[1] + dy, src.out[2] + dx, src.out[3] + dy]; }
   else if (o.type === 'bubble'){ o.x = src.x + dx; o.y = src.y + dy; if (src.tail) o.tail = [src.tail[0] + dx, src.tail[1] + dy]; }
   else { o.a = [src.a[0] + dx, src.a[1] + dy]; o.b = [src.b[0] + dx, src.b[1] + dy]; }
@@ -912,6 +953,22 @@ cv.addEventListener('pointerdown', e => {
   if (editing){ commitText(); return; }
   const p = pos(e);
   // 選んでいる吹き出しのしっぽの先をつかんだら、しっぽだけ動かす
+  const sc0 = objs[sel];
+  if ((tool === 'move' || tool === 'stamp') && cropMode && sc0 && sc0.type === 'stamp'){
+    const hs = cropHandles(sc0), k = hs.findIndex(([hx, hy]) => Math.hypot(p.x - hx, p.y - hy) * scale < 22);
+    if (k >= 0){ drag = { i: sel, crop: CROP_KEYS[k], src: JSON.parse(JSON.stringify(sc0)), snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return; }
+  }
+  const st = cropMode ? null : objs[sel];
+  if ((tool === 'move' || tool === 'stamp') && st && st.type === 'stamp'){
+    const cs = [[st.x, st.y], [st.x + st.w, st.y], [st.x + st.w, st.y + st.h], [st.x, st.y + st.h]];
+    const k = cs.findIndex(([hx, hy]) => Math.hypot(p.x - hx, p.y - hy) * scale < 22);
+    if (k >= 0){ drag = { i: sel, stpFix: cs[(k + 2) % 4], ratio: st.w / st.h, snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return; }
+  }
+  if (tool === 'stamp'){
+    sel = hit(p, o => o.type === 'stamp');
+    if (sel >= 0){ drag = { i: sel, start: p, src: JSON.parse(JSON.stringify(objs[sel])), snap: snapshot(), moved: false }; cv.setPointerCapture(e.pointerId); syncFromSel(); }
+    render(); updateUI(); return;
+  }
   const so = objs[sel];
   if ((tool === 'move' || tool === 'speed') && so && so.type === 'speed'){
     const [qx0, qy0, qx1, qy1] = spdOut(so), cs = [[qx0, qy0], [qx1, qy0], [qx1, qy1], [qx0, qy1]];
@@ -962,6 +1019,28 @@ cv.addEventListener('pointermove', e => {
   } else if (drag){
     const p = pos(e), dx = p.x - drag.start.x, dy = p.y - drag.start.y;
     if (Math.hypot(dx, dy) * scale > 2) drag.moved = true;
+    if (drag.crop){
+      if (drag.moved){
+        const s = drag.src, g = cropGeom(s), cr = (s.crop || [0, 0, 1, 1]).slice(), m = 12 / scale, k = drag.crop;
+        const cl = (v, a, b) => Math.min(Math.max(v, a), b);
+        if (k.includes('l')) cr[0] = (cl(p.x, g.fl, s.x + s.w - m) - g.fl) / g.Wf;
+        if (k.includes('r')) cr[2] = (cl(p.x, s.x + m, g.fl + g.Wf) - g.fl) / g.Wf;
+        if (k.includes('t')) cr[1] = (cl(p.y, g.ft, s.y + s.h - m) - g.ft) / g.Hf;
+        if (k.includes('b')) cr[3] = (cl(p.y, s.y + m, g.ft + g.Hf) - g.ft) / g.Hf;
+        const o = objs[drag.i];
+        o.crop = cr; o.x = g.fl + cr[0] * g.Wf; o.y = g.ft + cr[1] * g.Hf; o.w = (cr[2] - cr[0]) * g.Wf; o.h = (cr[3] - cr[1]) * g.Hf;
+        render();
+      }
+      return;
+    }
+    if (drag.stpFix){
+      if (drag.moved){
+        const [fx, fy] = drag.stpFix, o = objs[drag.i];
+        const w = Math.max(16, Math.max(Math.abs(p.x - fx), Math.abs(p.y - fy) * drag.ratio)), h = w / drag.ratio;   // 縦横の比率はそのまま
+        o.w = w; o.h = h; o.x = p.x < fx ? fx - w : fx; o.y = p.y < fy ? fy - h : fy; render();
+      }
+      return;
+    }
     if (drag.spdFix){
       if (drag.moved){
         const [fx, fy] = drag.spdFix, x = Math.min(Math.max(p.x, 0), cv.width), y = Math.min(Math.max(p.y, 0), cv.height);
@@ -1114,6 +1193,68 @@ $('#ersR').addEventListener('input', e => {
   render();
 });
 syncErs();
+// スタンプ：今の画像のコピーを小さく置く。複製は選んだスタンプと同じ大きさで少しずらして増やす
+// 2枚目からは、選んでいる（なければ最後に置いた）スタンプと同じ大きさで、右隣にすき間なく並べる（白フチは隣と重ねて1本ぶん）。右端まで来たら次の段へ
+function stampSpot(s){
+  const f = s.ol ? Math.max(2, Math.min(s.w, s.h) * 0.03) : 0, gap = f;
+  let x = s.x + s.w + gap, y = s.y;
+  if (x + s.w + f > cv.width){
+    // 同じ段に並んでいる（同じ大きさ・同じ高さの）スタンプの左端から、1段下に折り返す
+    const row = objs.filter(o => o.type === 'stamp' && Math.abs(o.w - s.w) < 0.5 && Math.abs(o.y - s.y) < 0.5);
+    x = Math.min(s.x, ...row.map(o => o.x));
+    y = s.y + s.h + gap;
+    if (y >= cv.height - 1) return null;   // 下に見切れるのはかまわない。まったく見えなくなるときだけ置かない
+  }
+  return [x, y];
+}
+// トリミング：切り取る前の画像全体が、今の大きさだとどこにどの大きさで来るか
+function cropGeom(o){
+  const cr = o.crop || [0, 0, 1, 1], Wf = o.w / (cr[2] - cr[0]), Hf = o.h / (cr[3] - cr[1]);
+  return { Wf, Hf, fl: o.x - cr[0] * Wf, ft: o.y - cr[1] * Hf };
+}
+const CROP_KEYS = ['tl', 't', 'tr', 'r', 'br', 'b', 'bl', 'l'];
+function cropHandles(o){
+  const x0 = o.x, y0 = o.y, x1 = o.x + o.w, y1 = o.y + o.h, mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  return [[x0, y0], [mx, y0], [x1, y0], [x1, my], [x1, y1], [mx, y1], [x0, y1], [x0, my]];
+}
+$('#stpCrop').addEventListener('click', () => {
+  if (!(objs[sel] && objs[sel].type === 'stamp')) return;
+  cropMode = !cropMode; render(); updateUI();
+});
+$('#stpCropReset').addEventListener('click', () => {
+  const o = objs[sel]; if (!o || o.type !== 'stamp' || !o.crop) return;
+  const before = snapshot(), g = cropGeom(o);
+  o.x = g.fl; o.y = g.ft; o.w = g.Wf; o.h = g.Hf; delete o.crop;
+  undoS.push(before); redoS = []; render(); updateUI();
+});
+function addStampFromBase(){
+  if (!baseStampId || !stampImgs[baseStampId]){
+    const cp = document.createElement('canvas'); cp.width = base.width; cp.height = base.height; cp.getContext('2d').drawImage(base, 0, 0);
+    baseStampId = 'st' + (++stampSeq) + '_' + Date.now(); stampImgs[baseStampId] = cp;
+  }
+  const cp = stampImgs[baseStampId];
+  const ref = (objs[sel] && objs[sel].type === 'stamp') ? objs[sel] : [...objs].reverse().find(o => o.type === 'stamp' && o.img === baseStampId);
+  let o;
+  if (ref){
+    const sameImg = ref.img === baseStampId, w = ref.w, h = sameImg ? ref.h : w * cp.height / cp.width;
+    const spot = stampSpot({ x: ref.x, y: ref.y, w, h, ol: ref.ol });
+    if (!spot){ toast('これ以上下に置くと見えなくなります。スタンプを小さくするか、選んで場所を変えてから押してください'); return; }
+    o = { type: 'stamp', img: baseStampId, x: spot[0], y: spot[1], w, h, ol: ref.ol, color, lw: size * unit() };
+    if (sameImg && ref.crop) o.crop = ref.crop.slice();
+  } else {
+    const w = cv.width * 0.35, h = w * cp.height / cp.width;
+    o = { type: 'stamp', img: baseStampId, x: cv.width * 0.6 - w / 2, y: Math.max(0, cv.height * 0.3 - h / 2), w, h, ol: true, color, lw: size * unit() };
+  }
+  pushUndo(); objs.push(o); sel = objs.length - 1; render(); updateUI();
+}
+function dupStamp(){
+  const s = objs[sel]; if (!s || s.type !== 'stamp') return;
+  const spot = stampSpot(s);
+  if (!spot){ toast('これ以上下に置くと見えなくなります。スタンプを小さくするか、選んで場所を変えてから押してください'); return; }
+  pushUndo(); objs.push({ ...s, x: spot[0], y: spot[1] }); sel = objs.length - 1; render(); updateUI();
+}
+$('#stpAdd').addEventListener('click', addStampFromBase);
+$('#stpDup').addEventListener('click', dupStamp);
 let spdSnap = null;
 ['spdN'].forEach(id => {
   $('#' + id).addEventListener('input', e => {
@@ -1237,10 +1378,21 @@ function updateUI(){
   $('#mosG').hidden = !mosCtxOn;
   const spdCtx = tool === 'speed' || (objs[sel] && objs[sel].type === 'speed');
   const ersCtx = tool === 'erase';
+  const stpCtx = tool === 'stamp' || (objs[sel] && objs[sel].type === 'stamp');
+  $('#stpG').hidden = !stpCtx;
+  const stpSel = !!(objs[sel] && objs[sel].type === 'stamp');
+  $('#stpDup').disabled = !stpSel;
+  if (!stpSel || (tool !== 'move' && tool !== 'stamp')) cropMode = false;
+  $('#stpCrop').disabled = !stpSel;
+  $('#stpCrop').setAttribute('aria-pressed', String(cropMode));
+  $('#stpCrop').textContent = cropMode ? 'トリミング完了' : 'トリミング';
+  $('#stpCropReset').hidden = !(cropMode && stpSel && objs[sel].crop);
+  $('#stpAdd').hidden = cropMode;
+  $('#stpHint').textContent = cropMode ? '四辺・四隅の□で切り取る範囲を決められます' : '四隅の□で大きさを変えられます';
   $('#ersG').hidden = !ersCtx;
   $('#spdG').hidden = !spdCtx;
   document.querySelector('.g-fin').hidden = !!bubCtx || mosCtxOn || spdCtx || ersCtx;   // 吹き出し・モザイクにはフチを使わないので隠す
-  document.querySelector('.g-colors').hidden = document.querySelector('.g-size').hidden = mosCtxOn || ersCtx;   // モザイクは色・太さを使わない
+  document.querySelector('.g-colors').hidden = document.querySelector('.g-size').hidden = mosCtxOn || ersCtx || stpCtx;   // モザイクは色・太さを使わない
   $('#curveG').hidden = !(tool === 'arrow' || (tool === 'move' && objs[sel] && objs[sel].type === 'arrow'));
   document.querySelector('label[for="sizeR"]').textContent = textCtx ? '大きさ' : '太さ';
 }
@@ -1268,7 +1420,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '='){ setZoom(viewZoom * 1.25); return; }
   if (e.key === '-'){ setZoom(viewZoom / 1.25); return; }
   if (e.key === '0'){ viewZoom = 1; applyScale(); return; }
-  const map ={ e: 'erase', p: 'pen', o: 'circle', a: 'arrow', t: 'text', b: 'bubble', l: 'speed', m: 'mosaic', v: 'move' };
+  const map ={ s: 'stamp', e: 'erase', p: 'pen', o: 'circle', a: 'arrow', t: 'text', b: 'bubble', l: 'speed', m: 'mosaic', v: 'move' };
   if (map[k]) setTool(map[k]);
   if ((e.key === 'Delete' || e.key === 'Backspace') && tool === 'move' && sel >= 0){ e.preventDefault(); delSel(); }
   if (e.key === 'Escape' && tool !== 'move' && sel >= 0){ sel = -1; render(); updateUI(); }
@@ -1277,6 +1429,7 @@ document.addEventListener('keydown', e => {
 // ---------- image loading ----------
 let sampleShown = true;
 function setBase(src, isSample, keepIfSameSize){
+  baseStampId = null;
   const MAX = 4096;
   const w0 = src.naturalWidth || src.width, h0 = src.naturalHeight || src.height;
   const k = Math.min(1, MAX / Math.max(w0, h0));
