@@ -104,7 +104,12 @@ canvas.text{cursor:text}
 .chip.fit:hover{background:var(--red);color:var(--on-red);filter:brightness(1.08)}
 .g-curve[hidden],.g-font[hidden],.g-bub[hidden],.g-fin[hidden],.g-mos[hidden],.g-colors[hidden],.g-size[hidden]{display:none!important}
 .g-mos{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
-.g-spd[hidden]{display:none!important}
+.g-spd[hidden],.g-ers[hidden]{display:none!important}
+.g-ers{gap:8px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
+.g-ers label{white-space:nowrap}
+.g-ers .dot{width:30px;height:30px}
+.g-ers .dot i{border:2px solid var(--ink);background:transparent;box-sizing:border-box}
+.g-ers input{width:150px;accent-color:var(--red)}
 .g-spd{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
 .g-spd label{white-space:nowrap}
 .g-spd .chip{white-space:nowrap;flex:none}
@@ -176,7 +181,7 @@ canvas.text{cursor:text}
 
 /* 道具バーの並び（広い画面は従来どおり。順番だけ固定） */
 .trow{display:contents}
-.g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
+.g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-ers{order:4}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
 .notice .short{display:none}
 #zPill{display:none}
 
@@ -198,7 +203,8 @@ canvas.text{cursor:text}
   .trow{display:flex;align-items:center;gap:6px}
   .trow.r2{flex-wrap:wrap}
   .g-tools,.g-edit{gap:0;padding:3px}
-  .tool{min-width:26px;width:26px;padding:5px 0}
+  .tool{min-width:24px;width:24px;padding:5px 0}
+  .tool svg{width:20px!important;height:20px!important}
   .g-tools,.g-edit{gap:1px}
   .tool .lb{display:none}
   .tool svg{width:21px;height:21px}
@@ -215,6 +221,8 @@ canvas.text{cursor:text}
   .g-bub{order:0;padding:2px}
   .g-mos{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
   .g-spd{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
+  .g-ers{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
+  .g-ers input{flex:1;width:auto;min-width:60px}
   .g-spd input{flex:1;width:auto;min-width:40px}
   .g-mos input{flex:1;width:auto;min-width:60px}
   .g-bub .chip{padding:5px 7px}
@@ -313,6 +321,8 @@ button{touch-action:manipulation}
   <div class="group g-tools" role="group" aria-label="道具">
     <button class="tool" data-tool="pen" type="button" title="ペン (P)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg><span class="lb">ペン</span></button>
+    <button class="tool" data-tool="erase" type="button" title="消しゴム (E)" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.3 4.3a2 2 0 0 1 2.8 0l3.6 3.6a2 2 0 0 1 0 2.8L11.4 20H7.6l-3.3-3.3a2 2 0 0 1 0-2.8z"/><path d="M9 9.6l6.4 6.4M11.4 20H20"/></svg><span class="lb">消しゴム</span></button>
     <button class="tool" data-tool="circle" type="button" title="丸 (O)" aria-pressed="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 5.2c4.6.3 7.5 2.9 7 6.6-.5 4-4.6 7-9.6 6.7C5.6 18.2 3.3 15.4 4 12c.8-4 5.3-7.2 11-6.4"/></svg><span class="lb">丸</span></button>
     <button class="tool" data-tool="arrow" type="button" title="矢印 (A)" aria-pressed="false">
@@ -346,8 +356,8 @@ button{touch-action:manipulation}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10H10a5 5 0 0 0 0 10h5"/><path d="M16 6l4 4-4 4"/></svg><span class="lb">進む</span></button>
     <button class="tool" id="delBtn" type="button" title="選んだものを消す (Delete)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/></svg><span class="lb">消す</span></button>
-    <button class="tool" id="clearBtn" type="button" title="書き込みを全部消す">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16l9-9 3 3-6 6H7z"/><path d="M11 12l3 3"/></svg><span class="lb">全消し</span></button>
+    <button class="tool" id="clearBtn" type="button" title="加工を全部消す（画像はそのまま）">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M9.5 6.5V4.2h5v2.3M6.3 6.5l.9 13.3h9.6l.9-13.3"/><path d="M10 10.5l4 5M14 10.5l-4 5"/></svg><span class="lb">全部消す</span></button>
   </div>
   </div>
   <div class="trow r2">
@@ -367,6 +377,12 @@ button{touch-action:manipulation}
     <button class="chip" data-shape="round" type="button" title="角丸"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 4h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-7l-5 4v-4H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/></svg><span>角丸</span></button>
     <button class="chip" data-shape="oval" type="button" title="まる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8.2 17.6C4.6 16.5 2.5 13.9 2.5 11c0-4.1 4.3-7.5 9.5-7.5s9.5 3.4 9.5 7.5-4.3 7.5-9.5 7.5c-.9 0-1.8-.1-2.6-.3L4.5 21z"/></svg><span>まる</span></button>
     <button class="chip" data-shape="burst" type="button" title="ギザギザ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5l1.8 3.3 3.6-1.6.2 3.9 3.9.6-1.9 3.4 2.4 2.9-3.8 1.1.1 3.9-3.6-1.4-2.1 3.3-1.9-3.4-3.7 1.3-.4-3.9-3.9-.9 2.3-3.1-1.6-3.6 3.9-.3.6-3.9 3.4 1.9z"/></svg><span>ギザギザ</span></button>
+  </div>
+
+  <div class="group g-ers" id="ersG" role="group" aria-label="消しゴムの大きさ" hidden>
+    <span class="dot"><i id="ersDot"></i></span>
+    <label for="ersR">消しゴムの大きさ</label>
+    <input type="range" id="ersR" min="1" max="10" step="1" value="4">
   </div>
 
   <div class="group g-spd" id="spdG" role="group" aria-label="集中線" hidden>
@@ -496,6 +512,8 @@ const fontOf = k => FONTS[k] || FONTS.hand;
 let base = document.createElement('canvas');
 let objs = [], undoS = [], redoS = [];
 let tool = 'circle', color = COLORS[0][1], size = 6, outline = false, font = 'hand';
+let ersLv = 4, hoverP = null;   // 消しゴムの大きさ（1〜10）、消しゴムの丸を出す位置
+const ersPx = lv => Math.max(4, Math.round(lv * 9 * unit()));   // 大きさ → 消す幅（画像のピクセル）
 let spdN = 5;   // 集中線の本数（1〜10）
 let mosLv = 5;   // モザイクの粗さ（1〜10）
 const mosPx = lv => Math.max(3, Math.round(lv * 5 * unit()));   // 粗さ → 1マスの大きさ（画像のピクセル）
@@ -553,7 +571,7 @@ function arrowParts(o){
   return [shaft, [rot(ang), [x1, y1], rot(-ang)]];
 }
 function lines(o){
-  if (o.type === 'pen') return [o.pts];
+  if (o.type === 'pen' || o.type === 'erase') return [o.pts];
   if (o.type === 'circle') return [ellipsePts(o)];
   if (o.type === 'arrow') return arrowParts(o);
   return [];
@@ -715,7 +733,7 @@ function bbox(o){
 function hit(p, filter){
   const tol = 10 / scale;
   for (let i = objs.length - 1; i >= 0; i--){
-    if (filter && !filter(objs[i])) continue;
+    if (objs[i].type === 'erase' || (filter && !filter(objs[i]))) continue;
     const [x0, y0, x1, y1] = bbox(objs[i]);
     if (p.x >= x0 - tol && p.x <= x1 + tol && p.y >= y0 - tol && p.y <= y1 + tol) return i;
   }
@@ -723,13 +741,36 @@ function hit(p, filter){
 }
 
 // ---------- render ----------
+const layers = [];   // 消しゴム用の作業層（モザイク・集中線・書き込み）
+function layer(i){
+  if (!layers[i]) layers[i] = document.createElement('canvas');
+  const l = layers[i]; if (l.width !== cv.width || l.height !== cv.height){ l.width = cv.width; l.height = cv.height; }
+  const lc = l.getContext('2d'); lc.setTransform(1, 0, 0, 1, 0, 0); lc.globalCompositeOperation = 'source-over'; lc.clearRect(0, 0, l.width, l.height);
+  return lc;
+}
+function eraseOn(lc, o){
+  lc.save(); lc.globalCompositeOperation = 'destination-out'; lc.lineCap = 'round'; lc.lineJoin = 'round';
+  lc.strokeStyle = '#000'; lc.lineWidth = o.lw; tracePath(lc, o.pts); lc.stroke(); lc.restore();
+}
 function render(c = ctx, withSel = true){
   c.clearRect(0, 0, cv.width, cv.height);
   c.drawImage(base, 0, 0);
-  objs.forEach(o => { if (o.type === 'mosaic') drawObj(c, o); });
-  objs.forEach(o => { if (o.type === 'speed') drawObj(c, o); });   // 集中線は背景の効果なので、書き込みの下に敷く
-  objs.forEach((o, i) => { if (o.type !== 'mosaic' && o.type !== 'speed' && !(editing && editing.idx === i && c === ctx)) drawObj(c, o); });
-  if (drawing && c === ctx) drawObj(c, drawing);
+  const list = objs.filter((o, i) => !(editing && editing.idx === i && c === ctx));
+  if (drawing && c === ctx) list.push(drawing);
+  const group = o => o.type === 'mosaic' ? 0 : o.type === 'speed' ? 1 : 2;   // モザイク → 集中線 → 書き込み の順に重ねる
+  if (!list.some(o => o.type === 'erase')){
+    for (const g of [0, 1, 2]) list.forEach(o => { if (group(o) === g) drawObj(c, o); });
+  } else {
+    // 作った順に各層へ描き、消しゴムはその時点までに描いたものだけを消す
+    const ls = [layer(0), layer(1), layer(2)];
+    list.forEach(o => { if (o.type === 'erase') ls.forEach(lc => eraseOn(lc, o)); else drawObj(ls[group(o)], o); });
+    ls.forEach(lc => c.drawImage(lc.canvas, 0, 0));
+  }
+  if (c === ctx && tool === 'erase' && hoverP){   // 消しゴムの大きさを丸で見せる
+    const r = (drawing ? drawing.lw : ersPx(ersLv)) / 2, u = 1 / scale;
+    c.save(); c.beginPath(); c.arc(hoverP.x, hoverP.y, r, 0, Math.PI * 2);
+    c.lineWidth = 3 * u; c.strokeStyle = 'rgba(0,0,0,.55)'; c.stroke(); c.lineWidth = 1.5 * u; c.strokeStyle = '#fff'; c.stroke(); c.restore();
+  }
   if (c === ctx && editing && editing.type === 'bubble') drawBubble(c, { ...editing, text: ta.value || '　　' }, false);
   if (c === ctx && bubDrag && bubDrag.moved) drawBubble(c, bubPreview(bubDrag), true);
   if (withSel && sel >= 0 && objs[sel]){
@@ -900,7 +941,9 @@ cv.addEventListener('pointerdown', e => {
   sel = -1;
   cv.setPointerCapture(e.pointerId);
   const o = { type: tool, color, lw: size * unit(), ol: outline, seed: (Math.random() * 1e9) | 0 };
-  if (tool === 'pen') o.pts = [[p.x, p.y]]; else { o.a = [p.x, p.y]; o.b = [p.x, p.y]; }
+  if (tool === 'erase'){ o.lw = ersPx(ersLv); delete o.color; delete o.ol; }
+  if (tool === 'pen' || tool === 'erase') o.pts = [[p.x, p.y]]; else { o.a = [p.x, p.y]; o.b = [p.x, p.y]; }
+  hoverP = p;
   if (tool === 'arrow') o.bend = curveDir * curveAmt / 100;
   if (tool === 'mosaic') o.px = mosPx(mosLv);
   if (tool === 'speed') o.dens = spdN;
@@ -908,9 +951,10 @@ cv.addEventListener('pointerdown', e => {
 });
 cv.addEventListener('pointermove', e => {
   if (pinchLock) return;
+  if (tool === 'erase'){ hoverP = pos(e); if (!drawing) render(); }
   if (drawing){
     const p = pos(e);
-    if (drawing.type === 'pen'){
+    if (drawing.type === 'pen' || drawing.type === 'erase'){
       const l = drawing.pts[drawing.pts.length - 1];
       if (Math.hypot(p.x - l[0], p.y - l[1]) * scale > 1.5) drawing.pts.push([p.x, p.y]);
     } else drawing.b = [p.x, p.y];
@@ -955,15 +999,16 @@ function endPointer(){
     if (o.type === 'speed' && Math.min(Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])) * scale <= 6){   // タップだけなら、そこを中心に少し空ける
       const rx = cv.width * 0.14, ry = cv.height * 0.14; o.b = [o.a[0] + rx, o.a[1] + ry]; o.a = [o.a[0] - rx, o.a[1] - ry];
     }
-    const ok = o.type === 'pen' || o.type === 'speed' || (o.type === 'mosaic'
+    const ok = o.type === 'pen' || o.type === 'erase' || o.type === 'speed' || (o.type === 'mosaic'
       ? Math.min(Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])) * scale > 6
       : Math.hypot(o.b[0] - o.a[0], o.b[1] - o.a[1]) * scale > 8);
-    if (ok){ pushUndo(); objs.push(o); sel = objs.length - 1; }   // 描いた直後のものは、そのまま太さ（矢印は曲がりも）を調整できる
+    if (ok){ pushUndo(); objs.push(o); sel = o.type === 'erase' ? -1 : objs.length - 1; }   // 描いた直後のものは、そのまま太さ（矢印は曲がりも）を調整できる
     render(); updateUI();
   }
   if (drag){ if (drag.moved){ undoS.push(drag.snap); redoS = []; } drag = null; updateUI(); }
 }
 cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointerleave', () => { if (tool === 'erase' && !drawing){ hoverP = null; render(); } });
 cv.addEventListener('pointercancel', endPointer);
 
 // ---------- text ----------
@@ -1059,6 +1104,16 @@ document.querySelectorAll('#bubG .chip').forEach(b => b.addEventListener('click'
   else { const o = objs[sel]; if (o && o.type === 'bubble' && o.shape !== bubShape){ const before = snapshot(); o.shape = bubShape; undoS.push(before); redoS = []; render(); } }
   syncControls(); updateUI();
 }));
+function syncErs(){
+  const d = $('#ersDot'), px = Math.max(6, Math.min(28, ersLv * 2.8));
+  d.style.width = d.style.height = px + 'px'; d.style.display = 'block'; d.style.borderRadius = '50%';
+}
+$('#ersR').addEventListener('input', e => {
+  ersLv = +e.target.value; syncErs();
+  if (!hoverP){ const r = cv.getBoundingClientRect(); hoverP = { x: cv.width / 2, y: cv.height / 2 }; }
+  render();
+});
+syncErs();
 let spdSnap = null;
 ['spdN'].forEach(id => {
   $('#' + id).addEventListener('input', e => {
@@ -1165,6 +1220,7 @@ function setTool(t){
   tool = t; if (t !== 'move') sel = -1;
   document.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
   cv.className = t === 'move' ? 'move' : t === 'text' ? 'text' : '';
+  if (t !== 'erase') hoverP = null;
   render(); updateUI();
 }
 function updateUI(){
@@ -1180,9 +1236,11 @@ function updateUI(){
   const mosCtxOn = tool === 'mosaic' || (objs[sel] && objs[sel].type === 'mosaic');
   $('#mosG').hidden = !mosCtxOn;
   const spdCtx = tool === 'speed' || (objs[sel] && objs[sel].type === 'speed');
+  const ersCtx = tool === 'erase';
+  $('#ersG').hidden = !ersCtx;
   $('#spdG').hidden = !spdCtx;
-  document.querySelector('.g-fin').hidden = !!bubCtx || mosCtxOn || spdCtx;   // 吹き出し・モザイクにはフチを使わないので隠す
-  document.querySelector('.g-colors').hidden = document.querySelector('.g-size').hidden = mosCtxOn;   // モザイクは色・太さを使わない
+  document.querySelector('.g-fin').hidden = !!bubCtx || mosCtxOn || spdCtx || ersCtx;   // 吹き出し・モザイクにはフチを使わないので隠す
+  document.querySelector('.g-colors').hidden = document.querySelector('.g-size').hidden = mosCtxOn || ersCtx;   // モザイクは色・太さを使わない
   $('#curveG').hidden = !(tool === 'arrow' || (tool === 'move' && objs[sel] && objs[sel].type === 'arrow'));
   document.querySelector('label[for="sizeR"]').textContent = textCtx ? '大きさ' : '太さ';
 }
@@ -1192,7 +1250,7 @@ function delSel(){ if (sel < 0) return; pushUndo(); objs.splice(sel, 1); sel = -
 $('#undoBtn').addEventListener('click', undo);
 $('#redoBtn').addEventListener('click', redo);
 $('#delBtn').addEventListener('click', delSel);
-$('#clearBtn').addEventListener('click', () => { if (!objs.length) return; pushUndo(); objs = []; sel = -1; render(); updateUI(); toast('書き込みを全部消しました（「戻す」で復活できます）'); });
+$('#clearBtn').addEventListener('click', () => { if (!objs.length) return; pushUndo(); objs = []; sel = -1; render(); updateUI(); toast('加工を全部消しました。画像はそのままです（「戻す」で復活できます）'); });
 
 document.addEventListener('keydown', e => {
   if (!$('#pastePad').hidden){ if (e.key === 'Escape') closePad(); return; }
@@ -1210,7 +1268,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '='){ setZoom(viewZoom * 1.25); return; }
   if (e.key === '-'){ setZoom(viewZoom / 1.25); return; }
   if (e.key === '0'){ viewZoom = 1; applyScale(); return; }
-  const map ={ p: 'pen', o: 'circle', a: 'arrow', t: 'text', b: 'bubble', l: 'speed', m: 'mosaic', v: 'move' };
+  const map ={ e: 'erase', p: 'pen', o: 'circle', a: 'arrow', t: 'text', b: 'bubble', l: 'speed', m: 'mosaic', v: 'move' };
   if (map[k]) setTool(map[k]);
   if ((e.key === 'Delete' || e.key === 'Backspace') && tool === 'move' && sel >= 0){ e.preventDefault(); delSel(); }
   if (e.key === 'Escape' && tool !== 'move' && sel >= 0){ sel = -1; render(); updateUI(); }
