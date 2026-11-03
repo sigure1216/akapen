@@ -104,7 +104,12 @@ canvas.text{cursor:text}
 .chip.fit:hover{background:var(--red);color:var(--on-red);filter:brightness(1.08)}
 .g-curve[hidden],.g-font[hidden],.g-bub[hidden],.g-fin[hidden],.g-mos[hidden],.g-colors[hidden],.g-size[hidden]{display:none!important}
 .g-mos{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
-.g-spd[hidden],.g-ers[hidden],.g-stp[hidden]{display:none!important}
+.g-spd[hidden],.g-ers[hidden],.g-stp[hidden],.g-mk[hidden],.g-del[hidden]{display:none!important}
+.g-mk{gap:4px;padding:3px}
+.g-mk .mk{display:flex;align-items:center;gap:6px;border:0;background:transparent;border-radius:8px;padding:5px 9px 5px 6px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap}
+.g-mk .mk i{display:block;width:26px;height:12px;border-radius:3px;opacity:.75}
+.g-mk .mk[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.g-del{display:none}
 .g-stp{gap:6px;padding:3px 10px 3px 3px;font-size:11px;color:var(--muted)}
 .g-stp .chip{white-space:nowrap;flex:none}
 .g-stp .chip:disabled{opacity:.4;cursor:default}
@@ -186,7 +191,7 @@ canvas.text{cursor:text}
 
 /* 道具バーの並び（広い画面は従来どおり。順番だけ固定） */
 .trow{display:contents}
-.g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-ers{order:4}.g-stp{order:4}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
+.g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-ers{order:4}.g-stp{order:4}.g-mk{order:2}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
 .notice .short{display:none}
 #zPill{display:none}
 
@@ -228,6 +233,11 @@ canvas.text{cursor:text}
   .g-spd{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
   .g-ers{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
   .g-stp{order:0;flex:1 1 auto;min-width:0}
+  .g-mk{order:0}
+  .g-mk .mk{padding:5px 6px}
+  .g-mk .mk span{display:none}
+  #delBtn{display:none}
+  .g-del:not([hidden]){display:flex;order:0;padding:2px}
   .g-stp .stp-hint{display:none}
   .g-ers input{flex:1;width:auto;min-width:60px}
   .g-spd input{flex:1;width:auto;min-width:40px}
@@ -328,6 +338,8 @@ button{touch-action:manipulation}
   <div class="group g-tools" role="group" aria-label="道具">
     <button class="tool" data-tool="pen" type="button" title="ペン (P)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg><span class="lb">ペン</span></button>
+    <button class="tool" data-tool="marker" type="button" title="マーカー (H)" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4.5l5 5-7.5 7.5H7v-5z"/><path d="M7 12l5 5M4 21h8"/><path d="M3.5 21l3.5-4" opacity=".6"/></svg><span class="lb">マーカー</span></button>
     <button class="tool" data-tool="erase" type="button" title="消しゴム (E)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.3 4.3a2 2 0 0 1 2.8 0l3.6 3.6a2 2 0 0 1 0 2.8L11.4 20H7.6l-3.3-3.3a2 2 0 0 1 0-2.8z"/><path d="M9 9.6l6.4 6.4M11.4 20H20"/></svg><span class="lb">消しゴム</span></button>
     <button class="tool" data-tool="circle" type="button" title="丸 (O)" aria-pressed="true">
@@ -386,6 +398,12 @@ button{touch-action:manipulation}
     <button class="chip" data-shape="round" type="button" title="角丸"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 4h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-7l-5 4v-4H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/></svg><span>角丸</span></button>
     <button class="chip" data-shape="oval" type="button" title="まる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M8.2 17.6C4.6 16.5 2.5 13.9 2.5 11c0-4.1 4.3-7.5 9.5-7.5s9.5 3.4 9.5 7.5-4.3 7.5-9.5 7.5c-.9 0-1.8-.1-2.6-.3L4.5 21z"/></svg><span>まる</span></button>
     <button class="chip" data-shape="burst" type="button" title="ギザギザ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5l1.8 3.3 3.6-1.6.2 3.9 3.9.6-1.9 3.4 2.4 2.9-3.8 1.1.1 3.9-3.6-1.4-2.1 3.3-1.9-3.4-3.7 1.3-.4-3.9-3.9-.9 2.3-3.1-1.6-3.6 3.9-.3.6-3.9 3.4 1.9z"/></svg><span>ギザギザ</span></button>
+  </div>
+
+  <div class="group g-mk" id="mkG" role="group" aria-label="マーカーの色" hidden></div>
+
+  <div class="group g-del" id="delG" hidden>
+    <button class="chip" id="delChip" type="button">選んだものを消す</button>
   </div>
 
   <div class="group g-stp" id="stpG" role="group" aria-label="スタンプ" hidden>
@@ -531,6 +549,9 @@ let objs = [], undoS = [], redoS = [];
 let tool = 'circle', color = COLORS[0][1], size = 6, outline = false, font = 'hand';
 let cropMode = false;   // スタンプのトリミング中
 const stampImgs = {}; let stampSeq = 0, baseStampId = null;   // baseStampId：今の画像のコピー（画像を差し替えたら作り直す）   // スタンプの画像（戻すの記録には番号だけ残す）
+const MK_COLORS = [['イエロー', '#FFE600'], ['ピンク', '#FF5C9D'], ['グリーン', '#3DF26B']];   // マーカーの蛍光色
+let mkColor = MK_COLORS[0][1];
+const MK = 3.2;   // マーカーは太さのスライダーの3.2倍の幅
 let ersLv = 4, hoverP = null;   // 消しゴムの大きさ（1〜10）、消しゴムの丸を出す位置
 const ersPx = lv => Math.max(4, Math.round(lv * 9 * unit()));   // 大きさ → 消す幅（画像のピクセル）
 let spdN = 5;   // 集中線の本数（1〜10）
@@ -590,7 +611,7 @@ function arrowParts(o){
   return [shaft, [rot(ang), [x1, y1], rot(-ang)]];
 }
 function lines(o){
-  if (o.type === 'pen' || o.type === 'erase') return [o.pts];
+  if (o.type === 'pen' || o.type === 'erase' || o.type === 'marker') return [o.pts];
   if (o.type === 'circle') return [ellipsePts(o)];
   if (o.type === 'arrow') return arrowParts(o);
   return [];
@@ -704,9 +725,23 @@ function drawSpeed(c, o){
   }
   c.restore();
 }
+// ---------- マーカー ----------
+const mkTmp = document.createElement('canvas'), mkCtx = mkTmp.getContext('2d');
+function drawMarker(c, o){
+  const pad = o.lw, xs = o.pts.map(p => p[0]), ys = o.pts.map(p => p[1]);
+  const x0 = Math.floor(Math.min(...xs) - pad), y0 = Math.floor(Math.min(...ys) - pad);
+  const w = Math.ceil(Math.max(...xs) + pad) - x0, h = Math.ceil(Math.max(...ys) + pad) - y0;
+  if (w < 1 || h < 1) return;
+  mkTmp.width = w; mkTmp.height = h;
+  mkCtx.setTransform(1, 0, 0, 1, -x0, -y0); mkCtx.lineCap = 'round'; mkCtx.lineJoin = 'round'; mkCtx.strokeStyle = o.color;
+  mkCtx.filter = 'blur(' + Math.max(0.5, o.lw * 0.06).toFixed(1) + 'px)';   // 縁を少しぼかして蛍光ペンらしく
+  mkCtx.lineWidth = o.lw; tracePath(mkCtx, o.pts); mkCtx.stroke(); mkCtx.filter = 'none';
+  c.save(); c.globalAlpha = 0.5; c.drawImage(mkTmp, x0, y0); c.restore();
+}
 const fontWait = new Set();
 function drawObj(c, o){
   c.lineCap = 'round'; c.lineJoin = 'round';
+  if (o.type === 'marker'){ drawMarker(c, o); return; }
   if (o.type === 'speed'){ drawSpeed(c, o); return; }
   if (o.type === 'stamp'){
     const im = stampImgs[o.img]; if (!im) return;
@@ -783,12 +818,12 @@ function render(c = ctx, withSel = true){
   c.drawImage(base, 0, 0);
   const list = objs.filter((o, i) => !(editing && editing.idx === i && c === ctx));
   if (drawing && c === ctx) list.push(drawing);
-  const group = o => o.type === 'mosaic' ? 0 : o.type === 'speed' ? 1 : 2;   // モザイク → 集中線 → 書き込み の順に重ねる
+  const group = o => o.type === 'mosaic' ? 0 : o.type === 'speed' ? 1 : o.type === 'marker' ? 2 : 3;   // モザイク → 集中線 → マーカー → 書き込み の順に重ねる
   if (!list.some(o => o.type === 'erase')){
-    for (const g of [0, 1, 2]) list.forEach(o => { if (group(o) === g) drawObj(c, o); });
+    for (const g of [0, 1, 2, 3]) list.forEach(o => { if (group(o) === g) drawObj(c, o); });
   } else {
     // 作った順に各層へ描き、消しゴムはその時点までに描いたものだけを消す
-    const ls = [layer(0), layer(1), layer(2)];
+    const ls = [layer(0), layer(1), layer(2), layer(3)];
     list.forEach(o => { if (o.type === 'erase') ls.forEach(lc => eraseOn(lc, o)); else drawObj(ls[group(o)], o); });
     ls.forEach(lc => c.drawImage(lc.canvas, 0, 0));
   }
@@ -941,7 +976,7 @@ document.addEventListener('gestureend', e => { if (gest) e.preventDefault(); ges
 // ---------- pointer ----------
 function pos(e){ const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; }
 function translate(o, src, dx, dy){
-  if (o.type === 'pen') o.pts = src.pts.map(([x, y]) => [x + dx, y + dy]);
+  if (o.type === 'pen' || o.type === 'marker') o.pts = src.pts.map(([x, y]) => [x + dx, y + dy]);
   else if (o.type === 'text'){ o.x = src.x + dx; o.y = src.y + dy; }
   else if (o.type === 'stamp'){ o.x = src.x + dx; o.y = src.y + dy; }
   else if (o.type === 'speed'){ o.a = [src.a[0] + dx, src.a[1] + dy]; o.b = [src.b[0] + dx, src.b[1] + dy]; if (src.out) o.out = [src.out[0] + dx, src.out[1] + dy, src.out[2] + dx, src.out[3] + dy]; }
@@ -1000,7 +1035,8 @@ cv.addEventListener('pointerdown', e => {
   cv.setPointerCapture(e.pointerId);
   const o = { type: tool, color, lw: size * unit(), ol: outline, seed: (Math.random() * 1e9) | 0 };
   if (tool === 'erase'){ o.lw = ersPx(ersLv); delete o.color; delete o.ol; }
-  if (tool === 'pen' || tool === 'erase') o.pts = [[p.x, p.y]]; else { o.a = [p.x, p.y]; o.b = [p.x, p.y]; }
+  if (tool === 'marker'){ o.color = mkColor; o.lw = size * unit() * MK; o.ol = false; }
+  if (tool === 'pen' || tool === 'erase' || tool === 'marker') o.pts = [[p.x, p.y]]; else { o.a = [p.x, p.y]; o.b = [p.x, p.y]; }
   hoverP = p;
   if (tool === 'arrow') o.bend = curveDir * curveAmt / 100;
   if (tool === 'mosaic') o.px = mosPx(mosLv);
@@ -1014,7 +1050,7 @@ cv.addEventListener('pointermove', e => {
   if (tool === 'erase'){ hoverP = pos(e); if (!drawing) render(); }
   if (drawing){
     const p = pos(e);
-    if (drawing.type === 'pen' || drawing.type === 'erase'){
+    if (drawing.type === 'pen' || drawing.type === 'erase' || drawing.type === 'marker'){
       const l = drawing.pts[drawing.pts.length - 1];
       if (Math.hypot(p.x - l[0], p.y - l[1]) * scale > 1.5) drawing.pts.push([p.x, p.y]);
     } else drawing.b = [p.x, p.y];
@@ -1081,7 +1117,7 @@ function endPointer(){
     if (o.type === 'speed' && Math.min(Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])) * scale <= 6){   // タップだけなら、そこを中心に少し空ける
       const rx = cv.width * 0.14, ry = cv.height * 0.14; o.b = [o.a[0] + rx, o.a[1] + ry]; o.a = [o.a[0] - rx, o.a[1] - ry];
     }
-    const ok = o.type === 'pen' || o.type === 'erase' || o.type === 'speed' || (o.type === 'mosaic'
+    const ok = o.type === 'pen' || o.type === 'erase' || o.type === 'marker' || o.type === 'speed' || (o.type === 'mosaic'
       ? Math.min(Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])) * scale > 6
       : Math.hypot(o.b[0] - o.a[0], o.b[1] - o.a[1]) * scale > 8);
     if (ok){ pushUndo(); objs.push(o); sel = o.type === 'erase' ? -1 : objs.length - 1; }   // 描いた直後のものは、そのまま太さ（矢印は曲がりも）を調整できる
@@ -1166,7 +1202,7 @@ $('#sizeR').addEventListener('input', e => {
   const o = editing ? null : (objs[sel] || null);
   if (!o){ applyStyle(); return; }
   if (sizeSnap === null) sizeSnap = snapshot();
-  if (isTextLike(o)) o.size = size * unit() * 6; else o.lw = size * unit();
+  if (isTextLike(o)) o.size = size * unit() * 6; else o.lw = size * unit() * (o.type === 'marker' ? MK : 1);
   render(); syncControls();
 });
 $('#sizeR').addEventListener('change', () => {
@@ -1261,6 +1297,20 @@ function dupStamp(){
 }
 $('#stpAdd').addEventListener('click', addStampFromBase);
 $('#stpDup').addEventListener('click', dupStamp);
+const mkBox = $('#mkG');
+MK_COLORS.forEach(([name, c]) => {
+  const b = document.createElement('button');
+  b.className = 'mk'; b.type = 'button'; b.dataset.c = c; b.title = '蛍光' + name;
+  b.innerHTML = '<i style="background:' + c + '"></i><span>' + name + '</span>';
+  b.addEventListener('click', () => {
+    mkColor = c;
+    const o = objs[sel];   // 描いた直後・選んだマーカーはその場で色が変わる
+    if (o && o.type === 'marker' && o.color !== c){ const before = snapshot(); o.color = c; undoS.push(before); redoS = []; render(); }
+    updateUI();
+  });
+  mkBox.appendChild(b);
+});
+$('#delChip').addEventListener('click', () => delSel());
 let spdSnap = null;
 ['spdN'].forEach(id => {
   $('#' + id).addEventListener('input', e => {
@@ -1323,7 +1373,8 @@ function applyStyle(){
   } else if (tool === 'move' && sel >= 0){
     const o = objs[sel], before = snapshot();
     o.color = color; o.ol = outline;
-    if (isTextLike(o)){ o.font = font; o.size = size * unit() * 6; } else o.lw = size * unit();
+    if (isTextLike(o)){ o.font = font; o.size = size * unit() * 6; } else o.lw = size * unit() * (o.type === 'marker' ? MK : 1);
+    if (o.type === 'marker'){ o.color = mkColor; o.ol = false; }
     if (o.type === 'bubble') o.ol = false;
     if (o.type === 'arrow') o.bend = curveDir * curveAmt / 100;
     if (before !== snapshot()){ undoS.push(before); redoS = []; }
@@ -1344,7 +1395,8 @@ function syncFromSel(){
   if (o.type === 'bubble' && o.shape) bubShape = o.shape;
   if (o.type === 'speed'){ spdN = o.dens || 5; $('#spdN').value = spdN; }
   if (o.type === 'mosaic'){ mosLv = Math.min(10, Math.max(1, Math.round((o.px || 20) / (5 * unit())))); $('#mosR').value = mosLv; }
-  if (isTextLike(o)){ font = o.font; size = Math.round(o.size / unit() / 6); } else size = Math.round(o.lw / unit());
+  if (isTextLike(o)){ font = o.font; size = Math.round(o.size / unit() / 6); } else size = Math.round(o.lw / unit() / (o.type === 'marker' ? MK : 1));
+  if (o.type === 'marker'){ mkColor = o.color; color = o.color; }
   if (o.type === 'arrow'){ const b = arrowBend(o); curveDir = b < 0 ? -1 : 1; curveAmt = Math.min(60, Math.round(Math.abs(b) * 100)); }
   size = Math.min(20, Math.max(2, size || 6));
   syncControls();
@@ -1384,6 +1436,10 @@ function updateUI(){
   $('#mosG').hidden = !mosCtxOn;
   const spdCtx = tool === 'speed' || (objs[sel] && objs[sel].type === 'speed');
   const ersCtx = tool === 'erase';
+  const mkCtxOn = tool === 'marker' || (objs[sel] && objs[sel].type === 'marker');
+  $('#mkG').hidden = !mkCtxOn;
+  mkBox.querySelectorAll('.mk').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === mkColor)));
+  $('#delG').hidden = !(tool === 'move' && sel >= 0);
   const stpCtx = tool === 'stamp' || (objs[sel] && objs[sel].type === 'stamp');
   $('#stpG').hidden = !stpCtx;
   const stpSel = !!(objs[sel] && objs[sel].type === 'stamp');
@@ -1397,8 +1453,9 @@ function updateUI(){
   $('#stpHint').textContent = cropMode ? '四辺・四隅の□で切り取る範囲を決められます' : '四隅の□で大きさを変えられます';
   $('#ersG').hidden = !ersCtx;
   $('#spdG').hidden = !spdCtx;
-  document.querySelector('.g-fin').hidden = !!bubCtx || mosCtxOn || spdCtx || ersCtx;   // 吹き出し・モザイクにはフチを使わないので隠す
-  document.querySelector('.g-colors').hidden = document.querySelector('.g-size').hidden = mosCtxOn || ersCtx || stpCtx;   // モザイクは色・太さを使わない
+  document.querySelector('.g-fin').hidden = !!bubCtx || mosCtxOn || spdCtx || ersCtx || mkCtxOn;   // 吹き出し・モザイクにはフチを使わないので隠す
+  document.querySelector('.g-colors').hidden = document.querySelector('.g-size').hidden = mosCtxOn || ersCtx || stpCtx;
+  if (mkCtxOn){ document.querySelector('.g-colors').hidden = true; $('#dotPreview').style.background = mkColor; }   // マーカーは蛍光色の列を使う   // モザイクは色・太さを使わない
   $('#curveG').hidden = !(tool === 'arrow' || (tool === 'move' && objs[sel] && objs[sel].type === 'arrow'));
   document.querySelector('label[for="sizeR"]').textContent = textCtx ? '大きさ' : '太さ';
 }
@@ -1426,7 +1483,7 @@ document.addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '='){ setZoom(viewZoom * 1.25); return; }
   if (e.key === '-'){ setZoom(viewZoom / 1.25); return; }
   if (e.key === '0'){ viewZoom = 1; applyScale(); return; }
-  const map ={ s: 'stamp', e: 'erase', p: 'pen', o: 'circle', a: 'arrow', t: 'text', b: 'bubble', l: 'speed', m: 'mosaic', v: 'move' };
+  const map ={ h: 'marker', s: 'stamp', e: 'erase', p: 'pen', o: 'circle', a: 'arrow', t: 'text', b: 'bubble', l: 'speed', m: 'mosaic', v: 'move' };
   if (map[k]) setTool(map[k]);
   if ((e.key === 'Delete' || e.key === 'Backspace') && tool === 'move' && sel >= 0){ e.preventDefault(); delSel(); }
   if (e.key === 'Escape' && tool !== 'move' && sel >= 0){ sel = -1; render(); updateUI(); }
