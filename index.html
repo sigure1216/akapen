@@ -106,6 +106,11 @@ canvas.text{cursor:text}
 .g-mos{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
 .g-spd[hidden],.g-ers[hidden],.g-stp[hidden],.g-mk[hidden],.g-del[hidden]{display:none!important}
 .g-mk{gap:4px;padding:3px}
+.g-mka[hidden]{display:none!important}
+.g-mka{gap:8px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700;order:2}
+.g-mka label{white-space:nowrap}
+.g-mka input{width:120px;accent-color:var(--red)}
+.g-mka .mka-v{min-width:2.6em;text-align:right;font-variant-numeric:tabular-nums}
 .g-mk .mk{display:flex;align-items:center;gap:6px;border:0;background:transparent;border-radius:8px;padding:5px 9px 5px 6px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap}
 .g-mk .mk i{display:block;width:26px;height:12px;border-radius:3px;opacity:.75}
 .g-mk .mk[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
@@ -234,6 +239,8 @@ canvas.text{cursor:text}
   .g-ers{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
   .g-stp{order:0;flex:1 1 auto;min-width:0}
   .g-mk{order:0}
+  .g-mka{order:0;flex:1 1 100%;min-width:0;padding:4px 10px}
+  .g-mka input{flex:1;width:auto;min-width:60px}
   .g-mk .mk{padding:5px 6px}
   .g-mk .mk span{display:none}
   #delBtn{display:none}
@@ -402,6 +409,12 @@ button{touch-action:manipulation}
 
   <div class="group g-mk" id="mkG" role="group" aria-label="マーカーの色" hidden></div>
 
+  <div class="group g-mka" id="mkaG" role="group" aria-label="マーカーの透明度" hidden>
+    <label for="mkaR">透明度</label>
+    <input type="range" id="mkaR" min="10" max="85" step="5" value="50">
+    <span class="mka-v" id="mkaV">50%</span>
+  </div>
+
   <div class="group g-del" id="delG" hidden>
     <button class="chip" id="delChip" type="button">選んだものを消す</button>
   </div>
@@ -551,6 +564,7 @@ let cropMode = false;   // スタンプのトリミング中
 const stampImgs = {}; let stampSeq = 0, baseStampId = null;   // baseStampId：今の画像のコピー（画像を差し替えたら作り直す）   // スタンプの画像（戻すの記録には番号だけ残す）
 const MK_COLORS = [['イエロー', '#FFE600'], ['ピンク', '#FF5C9D'], ['グリーン', '#3DF26B']];   // マーカーの蛍光色
 let mkColor = MK_COLORS[0][1];
+let mkAlpha = 0.5;   // マーカーの濃さ（透明度 50% ＝ 0.5）
 const MK = 3.2;   // マーカーは太さのスライダーの3.2倍の幅
 let ersLv = 4, hoverP = null;   // 消しゴムの大きさ（1〜10）、消しゴムの丸を出す位置
 const ersPx = lv => Math.max(4, Math.round(lv * 9 * unit()));   // 大きさ → 消す幅（画像のピクセル）
@@ -736,7 +750,7 @@ function drawMarker(c, o){
   mkCtx.setTransform(1, 0, 0, 1, -x0, -y0); mkCtx.lineCap = 'round'; mkCtx.lineJoin = 'round'; mkCtx.strokeStyle = o.color;
   mkCtx.filter = 'blur(' + Math.max(0.5, o.lw * 0.06).toFixed(1) + 'px)';   // 縁を少しぼかして蛍光ペンらしく
   mkCtx.lineWidth = o.lw; tracePath(mkCtx, o.pts); mkCtx.stroke(); mkCtx.filter = 'none';
-  c.save(); c.globalAlpha = 0.5; c.drawImage(mkTmp, x0, y0); c.restore();
+  c.save(); c.globalAlpha = typeof o.alpha === 'number' ? o.alpha : 0.5; c.drawImage(mkTmp, x0, y0); c.restore();
 }
 const fontWait = new Set();
 function drawObj(c, o){
@@ -1035,7 +1049,7 @@ cv.addEventListener('pointerdown', e => {
   cv.setPointerCapture(e.pointerId);
   const o = { type: tool, color, lw: size * unit(), ol: outline, seed: (Math.random() * 1e9) | 0 };
   if (tool === 'erase'){ o.lw = ersPx(ersLv); delete o.color; delete o.ol; }
-  if (tool === 'marker'){ o.color = mkColor; o.lw = size * unit() * MK; o.ol = false; }
+  if (tool === 'marker'){ o.color = mkColor; o.lw = size * unit() * MK; o.ol = false; o.alpha = mkAlpha; }
   if (tool === 'pen' || tool === 'erase' || tool === 'marker') o.pts = [[p.x, p.y]]; else { o.a = [p.x, p.y]; o.b = [p.x, p.y]; }
   hoverP = p;
   if (tool === 'arrow') o.bend = curveDir * curveAmt / 100;
@@ -1311,6 +1325,18 @@ MK_COLORS.forEach(([name, c]) => {
   mkBox.appendChild(b);
 });
 $('#delChip').addEventListener('click', () => delSel());
+function syncMka(){ const t = Math.round((1 - mkAlpha) * 100); $('#mkaR').value = t; $('#mkaV').textContent = t + '%'; }
+let mkaSnap = null;
+$('#mkaR').addEventListener('input', e => {
+  mkAlpha = 1 - (+e.target.value) / 100; $('#mkaV').textContent = e.target.value + '%';
+  const o = objs[sel];
+  if (o && o.type === 'marker'){ if (mkaSnap === null) mkaSnap = snapshot(); o.alpha = mkAlpha; render(); }
+});
+$('#mkaR').addEventListener('change', () => {
+  if (mkaSnap !== null && mkaSnap !== snapshot()){ undoS.push(mkaSnap); redoS = []; }
+  mkaSnap = null; updateUI();
+});
+syncMka();
 let spdSnap = null;
 ['spdN'].forEach(id => {
   $('#' + id).addEventListener('input', e => {
@@ -1396,7 +1422,7 @@ function syncFromSel(){
   if (o.type === 'speed'){ spdN = o.dens || 5; $('#spdN').value = spdN; }
   if (o.type === 'mosaic'){ mosLv = Math.min(10, Math.max(1, Math.round((o.px || 20) / (5 * unit())))); $('#mosR').value = mosLv; }
   if (isTextLike(o)){ font = o.font; size = Math.round(o.size / unit() / 6); } else size = Math.round(o.lw / unit() / (o.type === 'marker' ? MK : 1));
-  if (o.type === 'marker'){ mkColor = o.color; color = o.color; }
+  if (o.type === 'marker'){ mkColor = o.color; color = o.color; mkAlpha = typeof o.alpha === 'number' ? o.alpha : 0.5; syncMka(); }
   if (o.type === 'arrow'){ const b = arrowBend(o); curveDir = b < 0 ? -1 : 1; curveAmt = Math.min(60, Math.round(Math.abs(b) * 100)); }
   size = Math.min(20, Math.max(2, size || 6));
   syncControls();
@@ -1438,6 +1464,7 @@ function updateUI(){
   const ersCtx = tool === 'erase';
   const mkCtxOn = tool === 'marker' || (objs[sel] && objs[sel].type === 'marker');
   $('#mkG').hidden = !mkCtxOn;
+  $('#mkaG').hidden = !mkCtxOn;
   mkBox.querySelectorAll('.mk').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === mkColor)));
   $('#delG').hidden = !(tool === 'move' && sel >= 0);
   const stpCtx = tool === 'stamp' || (objs[sel] && objs[sel].type === 'stamp');

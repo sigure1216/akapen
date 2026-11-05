@@ -1,5 +1,5 @@
 // オフラインでも開けるようにするキャッシュ。内容を更新したら VERSION を上げる
-const VERSION = 'akapen-v10';
+const VERSION = 'akapen-v11';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
