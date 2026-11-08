@@ -147,6 +147,10 @@ canvas.text{cursor:text}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
   background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:700;
   z-index:30;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+.toast .tbtn{margin-left:12px;border:0;border-radius:7px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer;background:var(--red);color:#fff}
+.st-stage.drop-del #sc{outline:4px dashed var(--red);outline-offset:-4px}
+.st-stage.drop-del::after{content:'離すと画像を消します';position:absolute;left:50%;top:14px;transform:translateX(-50%);
+  background:var(--red);color:#fff;font-size:13px;font-weight:700;padding:7px 14px;border-radius:999px;pointer-events:none;white-space:nowrap}
 
 .sheet{position:fixed;inset:0;z-index:20;background:rgba(10,12,14,.72);display:grid;place-items:center;
   padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
@@ -582,6 +586,12 @@ const unit = () => Math.max(cv.width, cv.height) / 800;
 const snapshot = () => JSON.stringify(objs);
 function pushUndo(s = snapshot()){ undoS.push(s); if (undoS.length > 120) undoS.shift(); redoS = []; updateUI(); }
 function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2400); }
+function toastAction(msg, label, fn){
+  const t = $('#toast'); t.textContent = msg;
+  const b = document.createElement('button'); b.className = 'tbtn'; b.type = 'button'; b.textContent = label;
+  b.addEventListener('click', () => { t.hidden = true; fn(); });
+  t.appendChild(b); t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 5000);
+}
 const olColor = c => c.toUpperCase() === '#FFFFFF' || c.toUpperCase() === '#FFD400' ? '#111111' : '#FFFFFF';
 const fontStr = o => `${fontOf(o.font).w} ${o.size}px ${fontOf(o.font).f}`;
 
@@ -1893,7 +1903,7 @@ sc.addEventListener('pointerup', () => {
   if (!col.slots[d.i]){ col.sel = d.i; renderStudio(); openPad(d.i); }
   else { col.sel = col.sel === d.i ? -1 : d.i; renderStudio(); }
 });
-sc.addEventListener('pointercancel', () => { sDrag = null; });
+sc.addEventListener('pointercancel', () => { sDrag = null; $('#stStage').classList.remove('drop-del'); });
 sc.addEventListener('wheel', e => {
   if (col.layout === 'free'){
     const i = fHit(sPos(e)), it = col.free[i]; if (!it) return;
@@ -2043,11 +2053,24 @@ function freeMove(e){
   if (sDrag.mode === 'move' && sDrag.moved){
     const t = col.free[sDrag.i];
     t.x = sDrag.x0 + dx / sc.width; t.y = sDrag.y0 + dy / sc.height;
+    sDrag.out = p.x < 0 || p.y < 0 || p.x > sc.width || p.y > sc.height;   // 白い枠の外で離すと消す
+    $('#stStage').classList.toggle('drop-del', sDrag.out);
     renderStudio();
   }
 }
 function freeUp(){
   const d = sDrag; sDrag = null;
+  $('#stStage').classList.remove('drop-del');
+  if (d && d.mode === 'move' && d.moved && d.out){
+    const i = d.i, it = col.free[i]; if (!it) return;
+    it.x = d.x0; it.y = d.y0;   // 戻すときは動かす前の場所に戻す
+    col.free.splice(i, 1); col.fsel = -1; renderStudio();
+    toastAction('画像を消しました', '元に戻す', () => {
+      if (col.layout !== 'free') return;
+      col.free.splice(Math.min(i, col.free.length), 0, it); col.fsel = Math.min(i, col.free.length - 1); renderStudio();
+    });
+    return;
+  }
   if (!d || d.mode !== 'empty' || d.moved) return;
   if (col.fsel >= 0){ col.fsel = -1; renderStudio(); }
   else openPad(null);
