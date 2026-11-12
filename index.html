@@ -106,6 +106,8 @@ canvas.text{cursor:text}
 .g-mos{gap:6px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700}
 .g-spd[hidden],.g-ers[hidden],.g-stp[hidden],.g-mk[hidden],.g-del[hidden]{display:none!important}
 .g-mk{gap:4px;padding:3px}
+.chip.neon[hidden]{display:none}
+.chip.neon[aria-pressed="true"]{background:#1a0612;color:#FF6EC2;text-shadow:0 0 6px #FF2D9B,0 0 12px #FF2D9B}
 .g-mka[hidden]{display:none!important}
 .g-mka{gap:8px;padding:4px 12px;font-size:11px;color:var(--muted);font-weight:700;order:2}
 .g-mka label{white-space:nowrap}
@@ -403,6 +405,7 @@ button{touch-action:manipulation}
 
   <div class="group g-fin" role="group" aria-label="仕上げ">
     <button class="chip" id="olBtn" type="button" aria-pressed="false" title="白いフチを付けて背景から浮かせる">フチ</button>
+    <button class="chip neon" id="neonBtn" type="button" aria-pressed="false" title="ネオン管のように光らせる（ペン・丸・矢印）" hidden>ネオン</button>
   </div>
 
   <div class="group g-bub" id="bubG" role="group" aria-label="吹き出しの形" hidden>
@@ -549,7 +552,7 @@ const $ = s => document.querySelector(s);
 const cv = $('#cv'), ctx = cv.getContext('2d');
 const stage = $('#stage'), board = $('#board'), ta = $('#ta'), taok = $('#taok');
 
-const COLORS = [['赤','#E8262B'],['黄','#FFD400'],['白','#FFFFFF'],['黒','#111111'],['青','#1E6BFF']];
+const COLORS = [['赤','#E8262B'],['黄','#FFD400'],['白','#FFFFFF'],['黒','#111111'],['青','#1E6BFF'],['ピンク','#FF2D9B'],['水色','#22D3FF']];
 // 文字のフォント（n：ボタンの名前、f：書体、w：太さ）
 const FONTS = {
   hand:   { n: '手書き',     f: '"Yomogi", "Klee One", cursive', w: 400 },
@@ -569,7 +572,11 @@ const stampImgs = {}; let stampSeq = 0, baseStampId = null;   // baseStampId：�
 const MK_COLORS = [['イエロー', '#FFE600'], ['ピンク', '#FF5C9D'], ['グリーン', '#3DF26B']];   // マーカーの蛍光色
 let mkColor = MK_COLORS[0][1];
 let mkAlpha = 0.5;   // マーカーの濃さ（透明度 50% ＝ 0.5）
-const MK = 3.2;   // マーカーは太さのスライダーの3.2倍の幅
+const MK = 3.2;
+let neon = false;   // ネオン管風（ペン・丸・矢印）
+const NEON_TYPES = ['pen', 'circle', 'arrow'];
+// 色を白に寄せる（光っている芯の色）
+function lightenHex(h, k){ const n = parseInt(h.slice(1), 16); const f = v => Math.round(v + (255 - v) * k); return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`; }   // マーカーは太さのスライダーの3.2倍の幅
 let ersLv = 4, hoverP = null;   // 消しゴムの大きさ（1〜10）、消しゴムの丸を出す位置
 const ersPx = lv => Math.max(4, Math.round(lv * 9 * unit()));   // 大きさ → 消す幅（画像のピクセル）
 let spdN = 5;   // 集中線の本数（1〜10）
@@ -796,6 +803,15 @@ function drawObj(c, o){
     return;
   }
   const ps = lines(o);
+  if (o.neon){
+    const all = () => { for (const p of ps){ tracePath(c, p); c.stroke(); } };
+    c.save(); c.strokeStyle = o.color; c.shadowColor = o.color;
+    c.globalAlpha = 0.35; c.lineWidth = o.lw * 2.6; c.shadowBlur = o.lw * 5; all();   // ぼんやり広がる光
+    c.globalAlpha = 1; c.lineWidth = o.lw * 1.15; c.shadowBlur = o.lw * 2.2; all();     // 色の管
+    c.strokeStyle = lightenHex(o.color, 0.72); c.shadowColor = lightenHex(o.color, 0.4);
+    c.lineWidth = o.lw * 0.42; c.shadowBlur = o.lw * 0.9; all();                         // 白っぽく光る芯
+    c.restore(); return;
+  }
   if (o.ol){ c.strokeStyle = olColor(o.color); c.lineWidth = o.lw * 2.3; for (const p of ps){ tracePath(c, p); c.stroke(); } }
   c.strokeStyle = o.color; c.lineWidth = o.lw; for (const p of ps){ tracePath(c, p); c.stroke(); }
 }
@@ -1058,6 +1074,7 @@ cv.addEventListener('pointerdown', e => {
   sel = -1;
   cv.setPointerCapture(e.pointerId);
   const o = { type: tool, color, lw: size * unit(), ol: outline, seed: (Math.random() * 1e9) | 0 };
+  if (NEON_TYPES.includes(tool) && neon){ o.neon = true; o.ol = false; }
   if (tool === 'erase'){ o.lw = ersPx(ersLv); delete o.color; delete o.ol; }
   if (tool === 'marker'){ o.color = mkColor; o.lw = size * unit() * MK; o.ol = false; o.alpha = mkAlpha; }
   if (tool === 'pen' || tool === 'erase' || tool === 'marker') o.pts = [[p.x, p.y]]; else { o.a = [p.x, p.y]; o.b = [p.x, p.y]; }
@@ -1233,7 +1250,8 @@ $('#sizeR').addEventListener('change', () => {
   if (sizeSnap !== null && sizeSnap !== snapshot()){ undoS.push(sizeSnap); redoS = []; }
   sizeSnap = null; updateUI();
 });
-$('#olBtn').addEventListener('click', () => { outline = !outline; applyStyle(); });
+$('#olBtn').addEventListener('click', () => { outline = !outline; if (outline) neon = false; applyStyle(); });
+$('#neonBtn').addEventListener('click', () => { neon = !neon; if (neon) outline = false; applyStyle(); });
 const fontBox = $('#fontG');
 Object.entries(FONTS).forEach(([k, d]) => {
   const b = document.createElement('button');
@@ -1413,6 +1431,7 @@ function applyStyle(){
     if (o.type === 'marker'){ o.color = mkColor; o.ol = false; }
     if (o.type === 'bubble') o.ol = false;
     if (o.type === 'arrow') o.bend = curveDir * curveAmt / 100;
+    if (NEON_TYPES.includes(o.type)){ if (neon){ o.neon = true; o.ol = false; } else delete o.neon; }
     if (before !== snapshot()){ undoS.push(before); redoS = []; }
     render();
   } else if (sel >= 0 && objs[sel] && objs[sel].type !== 'mosaic'){
@@ -1420,6 +1439,7 @@ function applyStyle(){
     const o = objs[sel], before = snapshot();
     o.color = color;
     if (o.type !== 'bubble' && o.type !== 'speed') o.ol = outline;
+    if (NEON_TYPES.includes(o.type)){ if (neon){ o.neon = true; o.ol = false; } else delete o.neon; }
     if (before !== snapshot()){ undoS.push(before); redoS = []; }
     render();
   }
@@ -1428,6 +1448,7 @@ function applyStyle(){
 function syncFromSel(){
   const o = objs[sel]; if (!o) return;
   color = o.color; outline = !!o.ol;
+  if (NEON_TYPES.includes(o.type)) neon = !!o.neon;
   if (o.type === 'bubble' && o.shape) bubShape = o.shape;
   if (o.type === 'speed'){ spdN = o.dens || 5; $('#spdN').value = spdN; }
   if (o.type === 'mosaic'){ mosLv = Math.min(10, Math.max(1, Math.round((o.px || 20) / (5 * unit())))); $('#mosR').value = mosLv; }
@@ -1441,6 +1462,7 @@ function syncControls(){
   document.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === color)));
   $('#sizeR').value = size;
   $('#olBtn').setAttribute('aria-pressed', String(outline));
+  $('#neonBtn').setAttribute('aria-pressed', String(neon));
   fontBox.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.font === font)));
   document.querySelectorAll('#bubG .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.shape === bubShape)));
   $('#cvL').setAttribute('aria-pressed', String(curveDir < 0));
@@ -1474,6 +1496,7 @@ function updateUI(){
   const ersCtx = tool === 'erase';
   const mkCtxOn = tool === 'marker' || (objs[sel] && objs[sel].type === 'marker');
   $('#mkG').hidden = !mkCtxOn;
+  $('#neonBtn').hidden = !(NEON_TYPES.includes(tool) || (objs[sel] && NEON_TYPES.includes(objs[sel].type)));
   $('#mkaG').hidden = !mkCtxOn;
   mkBox.querySelectorAll('.mk').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === mkColor)));
   $('#delG').hidden = !(tool === 'move' && sel >= 0);
