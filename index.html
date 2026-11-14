@@ -205,6 +205,7 @@ canvas.text{cursor:text}
 .g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-ers{order:4}.g-stp{order:4}.g-mk{order:2}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
 .notice .short{display:none}
 #zPill{display:none}
+.zslide{display:none}
 
 /* 狭い画面（スマホ）：道具を2段に収めて、画像エリアを広げる */
 @media (max-width:640px){
@@ -266,6 +267,12 @@ canvas.text{cursor:text}
   #zPill{position:fixed;z-index:12;right:22px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
     border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.2);cursor:pointer}
   #zPill.on{display:block}
+  .zslide{display:flex;align-items:center;gap:6px;position:fixed;z-index:12;width:min(230px,70vw);padding:4px 6px;
+    border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--surface) 88%,transparent);
+    box-shadow:0 2px 10px rgba(0,0,0,.18);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .zslide button{flex:none;width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--ink);font-size:18px;font-weight:700;line-height:1;cursor:pointer}
+  .zslide input{flex:1;min-width:0;accent-color:var(--red)}
+  .studio:not([hidden]) ~ .zslide{display:none}
 }
 @media (max-width:340px){
   .tool{min-width:28px;width:28px}
@@ -468,6 +475,11 @@ button{touch-action:manipulation}
 </footer>
 
 <button id="zPill" type="button" title="画面に合わせる (0)">全体に戻す</button>
+<div id="zSlide" class="zslide" role="group" aria-label="拡大・縮小">
+  <button id="zsOut" type="button" aria-label="縮小">−</button>
+  <input type="range" id="zsR" min="0" max="100" step="1" value="25" aria-label="拡大・縮小">
+  <button id="zsIn" type="button" aria-label="拡大">＋</button>
+</div>
 
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-in">
@@ -924,7 +936,15 @@ function fit(){
   applyScale();
 }
 // 狭い画面ではズームのボタンを出さないので、拡大中だけ「全体に戻す」を画像の右上に浮かせる
+const zToV = z => Math.round(Math.log(z / ZOOM_MIN) / Math.log(ZOOM_MAX / ZOOM_MIN) * 100);
+const vToZ = v => ZOOM_MIN * Math.pow(ZOOM_MAX / ZOOM_MIN, v / 100);
 function placeZoomPill(){
+  const zs = $('#zSlide');
+  if (zs){
+    const r = $('#stage').getBoundingClientRect();
+    zs.style.left = (r.left + r.width / 2 - zs.offsetWidth / 2) + 'px'; zs.style.top = (r.bottom - zs.offsetHeight - 10) + 'px';
+    if (document.activeElement !== $('#zsR')) $('#zsR').value = zToV(viewZoom);
+  }
   const pill = $('#zPill'); if (!pill) return;
   const zoomed = Math.abs(viewZoom - 1) >= 0.01;
   pill.classList.toggle('on', zoomed);
@@ -958,6 +978,10 @@ $('#zIn').addEventListener('click', () => setZoom(viewZoom * 1.25));
 $('#zOut').addEventListener('click', () => setZoom(viewZoom / 1.25));
 $('#zVal').addEventListener('click', () => { viewZoom = 1; applyScale(); });
 $('#zPill').addEventListener('click', () => { viewZoom = 1; applyScale(); });
+$('#zsR').addEventListener('input', e => setZoom(vToZ(+e.target.value)));
+$('#zsR').addEventListener('change', e => e.target.blur());
+$('#zsIn').addEventListener('click', () => setZoom(viewZoom * 1.25));
+$('#zsOut').addEventListener('click', () => setZoom(viewZoom / 1.25));
 // Macのトラックパッドのピンチ（ctrl付きホイール）と ⌘/ctrl+ホイール
 stage.addEventListener('wheel', e => {
   if (!(e.ctrlKey || e.metaKey)) return;
@@ -973,7 +997,8 @@ stage.addEventListener('pointerdown', e => {
   if (e.pointerType !== 'touch') return;
   ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (ptrs.size === 2){
-    drawing = null;
+    drawing = null; bubDrag = null;
+    if (held){ clearTimeout(held.t); held = null; }   // まだ描き始めていない1本目の指は、なかったことにする
     if (drag){ objs = JSON.parse(drag.snap); drag = null; }
     const [a, b] = [...ptrs.values()];
     pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: viewZoom, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
@@ -1023,7 +1048,24 @@ function translate(o, src, dx, dy){
   else if (o.type === 'bubble'){ o.x = src.x + dx; o.y = src.y + dy; if (src.tail) o.tail = [src.tail[0] + dx, src.tail[1] + dy]; }
   else { o.a = [src.a[0] + dx, src.a[1] + dy]; o.b = [src.b[0] + dx, src.b[1] + dy]; }
 }
+// スマホ：1本目の指はすぐ描かず、少しだけ待つ。そのあいだに2本目が来たらピンチなので何も描かない
+let held = null;
+function flushHeld(){
+  if (!held) return;
+  const h = held; held = null; clearTimeout(h.t);
+  if (pinchLock) return;
+  const ev = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: h.id, pointerType: 'touch', isPrimary: true,
+    clientX: h.x, clientY: h.y, button: 0, buttons: 1 });
+  ev.__go = true; cv.dispatchEvent(ev);
+}
+window.addEventListener('pointermove', e => { if (held && e.pointerId === held.id && Math.hypot(e.clientX - held.x, e.clientY - held.y) > 6) flushHeld(); }, true);
+window.addEventListener('pointerup', e => { if (held && e.pointerId === held.id) flushHeld(); }, true);
+window.addEventListener('pointercancel', e => { if (held && e.pointerId === held.id){ clearTimeout(held.t); held = null; } }, true);
 cv.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'touch' && !e.__go && !pinchLock){
+    if (!held){ held = { id: e.pointerId, x: e.clientX, y: e.clientY }; held.t = setTimeout(flushHeld, 90); }
+    return;
+  }
   if (pinchLock) return;
   if (e.pointerType === 'mouse' && e.button !== 0) return;   // マウスは左ボタンだけで描く
   if (editing){ commitText(); return; }
