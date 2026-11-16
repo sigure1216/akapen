@@ -1008,7 +1008,8 @@ const ptrs = new Map();
 let pinch = null, pinchLock = false;
 // 先に stage で受け取る（capture）ので、2本目の指が乗った瞬間に描画を止められる
 stage.addEventListener('pointerdown', e => {
-  if (e.pointerType !== 'touch') return;
+  if (e.pointerType !== 'touch' || e.__go) return;   // 待っていた1本目の指を描き始めに回したもの（本物の指ではない）は数えない
+  if (e.isPrimary && ptrs.size){ ptrs.clear(); pinch = null; pinchLock = false; }   // 新しく触り始めたのに前の指が残っていたら片づける
   ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (ptrs.size === 2){
     drawing = null; bubDrag = null;
