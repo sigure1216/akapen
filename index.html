@@ -272,6 +272,10 @@ canvas.text{cursor:text}
     box-shadow:0 2px 10px rgba(0,0,0,.18);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
   .zslide button{flex:none;width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--ink);font-size:18px;font-weight:700;line-height:1;cursor:pointer}
   .zslide input{flex:1;min-width:0;accent-color:var(--red)}
+  .zslide #zsBtn svg{width:20px;height:20px;display:block;margin:auto}
+  .zslide:not(.open){width:auto;padding:3px}
+  .zslide:not(.open) > :not(#zsBtn){display:none}
+  .zslide.open #zsBtn{display:none}
   .studio:not([hidden]) ~ .zslide{display:none}
 }
 @media (max-width:340px){
@@ -476,6 +480,7 @@ button{touch-action:manipulation}
 
 <button id="zPill" type="button" title="画面に合わせる (0)">全体に戻す</button>
 <div id="zSlide" class="zslide" role="group" aria-label="拡大・縮小">
+  <button id="zsBtn" type="button" aria-label="拡大・縮小を開く"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/></svg></button>
   <button id="zsOut" type="button" aria-label="縮小">−</button>
   <input type="range" id="zsR" min="0" max="100" step="1" value="25" aria-label="拡大・縮小">
   <button id="zsIn" type="button" aria-label="拡大">＋</button>
@@ -942,7 +947,8 @@ function placeZoomPill(){
   const zs = $('#zSlide');
   if (zs){
     const r = $('#stage').getBoundingClientRect();
-    zs.style.left = (r.left + r.width / 2 - zs.offsetWidth / 2) + 'px'; zs.style.top = (r.bottom - zs.offsetHeight - 10) + 'px';
+    zs.style.left = (zs.classList.contains('open') ? r.left + r.width / 2 - zs.offsetWidth / 2 : r.right - zs.offsetWidth - 10) + 'px';
+    zs.style.top = (r.bottom - zs.offsetHeight - 10) + 'px';
     if (document.activeElement !== $('#zsR')) $('#zsR').value = zToV(viewZoom);
   }
   const pill = $('#zPill'); if (!pill) return;
@@ -978,10 +984,18 @@ $('#zIn').addEventListener('click', () => setZoom(viewZoom * 1.25));
 $('#zOut').addEventListener('click', () => setZoom(viewZoom / 1.25));
 $('#zVal').addEventListener('click', () => { viewZoom = 1; applyScale(); });
 $('#zPill').addEventListener('click', () => { viewZoom = 1; applyScale(); });
-$('#zsR').addEventListener('input', e => setZoom(vToZ(+e.target.value)));
+// ふだんは虫めがねボタンだけ。押すとスライダーが開き、3秒触らなければたたむ（画像の上に重なって描けなくなるのを防ぐ）
+let zsTimer = 0, zsHold = false;
+function zsClose(){ clearTimeout(zsTimer); $('#zSlide').classList.remove('open'); $('#zsR').blur(); placeZoomPill(); }
+function zsKick(){ clearTimeout(zsTimer); zsTimer = setTimeout(() => { if (!zsHold) zsClose(); }, 3000); }
+$('#zsBtn').addEventListener('click', () => { $('#zSlide').classList.add('open'); placeZoomPill(); zsKick(); });
+$('#zSlide').addEventListener('pointerdown', () => { zsHold = true; clearTimeout(zsTimer); });
+window.addEventListener('pointerup', () => { if (zsHold){ zsHold = false; zsKick(); } });
+window.addEventListener('pointercancel', () => { if (zsHold){ zsHold = false; zsKick(); } });
+$('#zsR').addEventListener('input', e => { setZoom(vToZ(+e.target.value)); zsKick(); });
 $('#zsR').addEventListener('change', e => e.target.blur());
-$('#zsIn').addEventListener('click', () => setZoom(viewZoom * 1.25));
-$('#zsOut').addEventListener('click', () => setZoom(viewZoom / 1.25));
+$('#zsIn').addEventListener('click', () => { setZoom(viewZoom * 1.25); zsKick(); });
+$('#zsOut').addEventListener('click', () => { setZoom(viewZoom / 1.25); zsKick(); });
 // Macのトラックパッドのピンチ（ctrl付きホイール）と ⌘/ctrl+ホイール
 stage.addEventListener('wheel', e => {
   if (!(e.ctrlKey || e.metaKey)) return;
@@ -1050,6 +1064,8 @@ function translate(o, src, dx, dy){
 }
 // スマホ：1本目の指はすぐ描かず、少しだけ待つ。そのあいだに2本目が来たらピンチなので何も描かない
 let held = null;
+function capPtr(e){ try { cv.setPointerCapture(e.pointerId); } catch (err) {} }   // 機種によって失敗しても描き始められるように
+cv.addEventListener('pointerdown', () => { if ($('#zSlide').classList.contains('open')) zsClose(); }, true);
 function flushHeld(){
   if (!held) return;
   const h = held; held = null; clearTimeout(h.t);
@@ -1074,33 +1090,33 @@ cv.addEventListener('pointerdown', e => {
   const sc0 = objs[sel];
   if ((tool === 'move' || tool === 'stamp') && cropMode && sc0 && sc0.type === 'stamp'){
     const hs = cropHandles(sc0), k = hs.findIndex(([hx, hy]) => Math.hypot(p.x - hx, p.y - hy) * scale < 22);
-    if (k >= 0){ drag = { i: sel, crop: CROP_KEYS[k], src: JSON.parse(JSON.stringify(sc0)), snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return; }
+    if (k >= 0){ drag = { i: sel, crop: CROP_KEYS[k], src: JSON.parse(JSON.stringify(sc0)), snap: snapshot(), moved: false, start: p }; capPtr(e); return; }
   }
   const st = cropMode ? null : objs[sel];
   if ((tool === 'move' || tool === 'stamp') && st && st.type === 'stamp'){
     const cs = [[st.x, st.y], [st.x + st.w, st.y], [st.x + st.w, st.y + st.h], [st.x, st.y + st.h]];
     const k = cs.findIndex(([hx, hy]) => Math.hypot(p.x - hx, p.y - hy) * scale < 22);
-    if (k >= 0){ drag = { i: sel, stpFix: cs[(k + 2) % 4], ratio: st.w / st.h, snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return; }
+    if (k >= 0){ drag = { i: sel, stpFix: cs[(k + 2) % 4], ratio: st.w / st.h, snap: snapshot(), moved: false, start: p }; capPtr(e); return; }
   }
   if (tool === 'stamp'){
     sel = hit(p, o => o.type === 'stamp');
-    if (sel >= 0){ drag = { i: sel, start: p, src: JSON.parse(JSON.stringify(objs[sel])), snap: snapshot(), moved: false }; cv.setPointerCapture(e.pointerId); syncFromSel(); }
+    if (sel >= 0){ drag = { i: sel, start: p, src: JSON.parse(JSON.stringify(objs[sel])), snap: snapshot(), moved: false }; capPtr(e); syncFromSel(); }
     render(); updateUI(); return;
   }
   const so = objs[sel];
   if ((tool === 'move' || tool === 'speed') && so && so.type === 'speed'){
     const [qx0, qy0, qx1, qy1] = spdOut(so), cs = [[qx0, qy0], [qx1, qy0], [qx1, qy1], [qx0, qy1]];
     const k = cs.findIndex(([hx, hy]) => Math.hypot(p.x - hx, p.y - hy) * scale < 24);
-    if (k >= 0){ drag = { i: sel, spdFix: cs[(k + 2) % 4], snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return; }
+    if (k >= 0){ drag = { i: sel, spdFix: cs[(k + 2) % 4], snap: snapshot(), moved: false, start: p }; capPtr(e); return; }
   }
   const sb = objs[sel];
   if ((tool === 'move' || tool === 'bubble') && sb && sb.type === 'bubble' && sb.tail && Math.hypot(p.x - sb.tail[0], p.y - sb.tail[1]) * scale < 16){
-    drag = { i: sel, tail: true, snap: snapshot(), moved: false, start: p }; cv.setPointerCapture(e.pointerId); return;
+    drag = { i: sel, tail: true, snap: snapshot(), moved: false, start: p }; capPtr(e); return;
   }
   if (tool === 'bubble'){
     const i = hit(p, o => o.type === 'bubble');
     if (i >= 0){ sel = -1; startText(objs[i], i); e.preventDefault(); return; }
-    sel = -1; bubDrag = { tip: p, at: p, moved: false }; cv.setPointerCapture(e.pointerId); render(); return;
+    sel = -1; bubDrag = { tip: p, at: p, moved: false }; capPtr(e); render(); return;
   }
   if (tool === 'text'){
     sel = -1;
@@ -1110,11 +1126,11 @@ cv.addEventListener('pointerdown', e => {
   }
   if (tool === 'move'){
     sel = hit(p);
-    if (sel >= 0){ drag = { i: sel, start: p, src: JSON.parse(JSON.stringify(objs[sel])), snap: snapshot(), moved: false }; cv.setPointerCapture(e.pointerId); syncFromSel(); }
+    if (sel >= 0){ drag = { i: sel, start: p, src: JSON.parse(JSON.stringify(objs[sel])), snap: snapshot(), moved: false }; capPtr(e); syncFromSel(); }
     render(); updateUI(); return;
   }
   sel = -1;
-  cv.setPointerCapture(e.pointerId);
+  capPtr(e);
   const o = { type: tool, color, lw: size * unit(), ol: outline, seed: (Math.random() * 1e9) | 0 };
   if (NEON_TYPES.includes(tool) && neon){ o.neon = true; o.ol = false; }
   if (tool === 'erase'){ o.lw = ersPx(ersLv); delete o.color; delete o.ol; }
