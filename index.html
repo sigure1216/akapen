@@ -205,7 +205,11 @@ canvas.text{cursor:text}
 .g-tools{order:1}.g-colors{order:2}.g-size{order:3}.g-fin{order:4}.g-curve{order:4}.g-font{order:4}.g-bub{order:4}.g-mos{order:4}.g-spd{order:4}.g-ers{order:4}.g-stp{order:4}.g-mk{order:2}.g-zoom{order:5}.tools .spacer{order:6}.g-edit{order:7}
 .notice .short{display:none}
 #zPill{display:none}
+.g-fin .chip.line[hidden],.g-fin #olBtn[hidden]{display:none}
+.g-fin .chip.line[aria-pressed=true]{background:var(--red);color:#fff;border-color:var(--red)}
+@media (max-width:640px){ .g-fin .chip.line{min-height:34px;padding-inline:12px} }
 .zslide{display:none}
+#hzBtn{display:none}
 
 /* 狭い画面（スマホ）：道具を2段に収めて、画像エリアを広げる */
 @media (max-width:640px){
@@ -214,6 +218,10 @@ canvas.text{cursor:text}
   .logo b{font-size:20px}
   header .btn{padding:8px}
   header .btn .lb{display:none}
+  header{gap:4px}
+  header .btn{padding:7px 6px}
+  .logo b{white-space:nowrap}
+  #saveBtn{white-space:nowrap;padding-inline:9px}
   header .btn.primary{padding:8px 11px}
   header .btn.primary svg{margin-right:0}
   body > .notice{grid-row:3;grid-column:1;align-self:start;justify-self:start;z-index:2;margin:8px;padding:4px 10px;
@@ -229,6 +237,7 @@ canvas.text{cursor:text}
   .tool svg{width:20px!important;height:20px!important}
   .g-tools,.g-edit{gap:1px}
   .tool .lb{display:none}
+  @media (max-width:380px){ .trow.r1{gap:4px} .g-tools,.g-edit{gap:0} .tool{min-width:21px;width:21px} .tool svg{width:19px!important;height:19px!important} }
   .tool svg{width:21px;height:21px}
   .tools .spacer{display:block;flex:1;min-width:0}
   .g-zoom{display:none}
@@ -266,16 +275,20 @@ canvas.text{cursor:text}
   .chip.hand{font-size:13px}
   #zPill{position:fixed;z-index:12;right:22px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
     border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.2);cursor:pointer}
-  #zPill.on{display:block}
-  .zslide{display:flex;align-items:center;gap:6px;position:fixed;z-index:12;width:min(230px,70vw);padding:4px 6px;
+  #zPill.on{display:none}
+  .zslide{display:flex;align-items:center;gap:6px;position:fixed;z-index:12;width:min(290px,92vw);padding:4px 6px;
     border:1px solid var(--line);border-radius:999px;background:color-mix(in srgb,var(--surface) 88%,transparent);
     box-shadow:0 2px 10px rgba(0,0,0,.18);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
   .zslide button{flex:none;width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--ink);font-size:18px;font-weight:700;line-height:1;cursor:pointer}
   .zslide input{flex:1;min-width:0;accent-color:var(--red)}
   .zslide #zsBtn svg{width:20px;height:20px;display:block;margin:auto}
-  .zslide:not(.open){width:auto;padding:3px}
-  .zslide:not(.open) > :not(#zsBtn){display:none}
-  .zslide.open #zsBtn{display:none}
+  .zslide:not(.open){display:none}
+  .zslide #zsBtn{display:none}
+  .zslide #zsFit{width:auto;padding:0 10px;font-size:12px;border-radius:999px;background:var(--soft)}
+  #hzBtn{display:inline-flex;position:relative}
+  #hzBtn.on{border-color:var(--red);color:var(--red)}
+  #hzBtn.zoomed::after{content:"";position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--red)}
+  body:has(#studio:not([hidden])) #hzBtn{display:none}
   .studio:not([hidden]) ~ .zslide{display:none}
 }
 @media (max-width:340px){
@@ -310,6 +323,10 @@ canvas.text{cursor:text}
   .st-foot .slotctl input[type=range]{flex:1 1 60px;width:auto;min-width:50px}
   .st-foot .slotctl .chip{padding:5px 8px;font-size:12px}
 }
+@media (max-width:400px){
+  #saveBtn svg{display:none}
+  .logo b{font-size:18px!important}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* 単体ページ用の土台 */
@@ -332,6 +349,7 @@ button{touch-action:manipulation}
 <header>
   <div class="logo"><b>赤ペンくん2.0</b><span>画像に手書きで注釈</span></div>
   <input type="file" id="file" accept="image/*" hidden>
+  <button class="btn" id="hzBtn" type="button" title="拡大・縮小" aria-label="拡大・縮小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/></svg></button>
   <button class="btn" id="openBtn" type="button" title="画像を開く">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
     <span class="lb">画像を開く</span></button>
@@ -417,6 +435,7 @@ button{touch-action:manipulation}
   <div class="group g-fin" role="group" aria-label="仕上げ">
     <button class="chip" id="olBtn" type="button" aria-pressed="false" title="白いフチを付けて背景から浮かせる">フチ</button>
     <button class="chip neon" id="neonBtn" type="button" aria-pressed="false" title="ネオン管のように光らせる（ペン・丸・矢印）" hidden>ネオン</button>
+    <button class="chip line" id="lineBtn" type="button" aria-pressed="false" title="まっすぐな線を引く（ペン・マーカー）" hidden>直線</button>
   </div>
 
   <div class="group g-bub" id="bubG" role="group" aria-label="吹き出しの形" hidden>
@@ -442,7 +461,8 @@ button{touch-action:manipulation}
     <button class="chip" id="stpDup" type="button" title="選んだスタンプを同じ大きさで増やす">複製</button>
     <button class="chip" id="stpCrop" type="button" aria-pressed="false" title="選んだスタンプの切り取る範囲を決める">トリミング</button>
     <button class="chip" id="stpCropReset" type="button" hidden title="切り取りをやめて画像全体に戻す">切り取りを戻す</button>
-    <span class="stp-hint" id="stpHint">四隅の□で大きさを変えられます</span>
+    <button class="chip" id="stpRatio" type="button" hidden title="縦横の伸び縮みをやめて元の形に戻す">比率を戻す</button>
+    <span class="stp-hint" id="stpHint">四隅の□で大きさ、四辺の白いつまみで縦・横だけ伸び縮み</span>
   </div>
 
   <div class="group g-ers" id="ersG" role="group" aria-label="消しゴムの大きさ" hidden>
@@ -484,6 +504,7 @@ button{touch-action:manipulation}
   <button id="zsOut" type="button" aria-label="縮小">−</button>
   <input type="range" id="zsR" min="0" max="100" step="1" value="25" aria-label="拡大・縮小">
   <button id="zsIn" type="button" aria-label="拡大">＋</button>
+  <button id="zsFit" type="button" aria-label="全体に戻す">全体</button>
 </div>
 
 <div class="sheet" id="sheet" hidden>
@@ -536,6 +557,7 @@ button{touch-action:manipulation}
       <label for="fRot">回転</label>
       <input type="range" id="fRot" min="-180" max="180" step="1" value="0">
       <output id="fRotVal" for="fRot" style="min-width:3.2em;font-variant-numeric:tabular-nums">0°</output>
+      <button class="chip" id="fRatio" type="button" hidden title="縦横の伸び縮みをやめて元の形に戻す">比率を戻す</button>
       <button class="chip" id="fFrame" type="button" aria-pressed="false">白フチ</button>
       <button class="chip" id="fFront" type="button">前へ</button>
       <button class="chip" id="fBack" type="button">後ろへ</button>
@@ -594,6 +616,18 @@ let neon = false;   // ネオン管風（ペン・丸・矢印）
 const NEON_TYPES = ['pen', 'circle', 'arrow'];
 // 色を白に寄せる（光っている芯の色）
 function lightenHex(h, k){ const n = parseInt(h.slice(1), 16); const f = v => Math.round(v + (255 - v) * k); return `rgb(${f(n >> 16 & 255)},${f(n >> 8 & 255)},${f(n & 255)})`; }   // マーカーは太さのスライダーの3.2倍の幅
+// まっすぐな線（ペン・マーカー）：「直線」をONにすると、なぞった始まりと終わりを結ぶ線になる
+const LINE_TOOLS = ['pen', 'marker'];
+let lineOn = false, lnGuide = null;
+function linePts(a, b){ const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 6)), r = []; for (let i = 0; i <= n; i++) r.push([a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n]); return r; }
+// 横・縦・斜め45°に近いときは、ピタッとそろえる
+function snapEnd(a, p){
+  const dx = p[0] - a[0], dy = p[1] - a[1], ang = Math.atan2(dy, dx), st = Math.PI / 4, k = Math.round(ang / st);
+  if (Math.abs(ang - k * st) > 7 * Math.PI / 180){ lnGuide = null; return p; }
+  if (!lnGuide || lnGuide[1] !== k){ try { navigator.vibrate && navigator.vibrate(8); } catch {} }   // そろった瞬間に軽く知らせる
+  lnGuide = [a, k];   // 指で線の先が隠れても、そろったことが分かるように点線を出す
+  const len = Math.hypot(dx, dy); return [a[0] + Math.cos(k * st) * len, a[1] + Math.sin(k * st) * len];
+}
 let ersLv = 4, hoverP = null;   // 消しゴムの大きさ（1〜10）、消しゴムの丸を出す位置
 const ersPx = lv => Math.max(4, Math.round(lv * 9 * unit()));   // 大きさ → 消す幅（画像のピクセル）
 let spdN = 5;   // 集中線の本数（1〜10）
@@ -889,6 +923,11 @@ function render(c = ctx, withSel = true){
     c.save(); c.beginPath(); c.arc(hoverP.x, hoverP.y, r, 0, Math.PI * 2);
     c.lineWidth = 3 * u; c.strokeStyle = 'rgba(0,0,0,.55)'; c.stroke(); c.lineWidth = 1.5 * u; c.strokeStyle = '#fff'; c.stroke(); c.restore();
   }
+  if (c === ctx && drawing && drawing.la && lnGuide){   // 横・縦・45°にそろっているときの点線
+    const [a, k] = lnGuide, u = 1 / scale, L = cv.width + cv.height, ca = Math.cos(k * Math.PI / 4), sa = Math.sin(k * Math.PI / 4);
+    c.save(); c.beginPath(); c.moveTo(a[0] - ca * L, a[1] - sa * L); c.lineTo(a[0] + ca * L, a[1] + sa * L);
+    c.setLineDash([8 * u, 6 * u]); c.lineWidth = 1.5 * u; c.strokeStyle = 'rgba(30,107,255,.8)'; c.stroke(); c.restore();
+  }
   if (c === ctx && editing && editing.type === 'bubble') drawBubble(c, { ...editing, text: ta.value || '　　' }, false);
   if (c === ctx && bubDrag && bubDrag.moved) drawBubble(c, bubPreview(bubDrag), true);
   if (withSel && sel >= 0 && objs[sel]){
@@ -921,6 +960,8 @@ function render(c = ctx, withSel = true){
       for (const [hx, hy] of cropHandles(o)){ c.fillRect(hx - hs, hy - hs, hs * 2, hs * 2); c.strokeRect(hx - hs, hy - hs, hs * 2, hs * 2); }
     } else if (o.type === 'stamp' && (tool === 'move' || tool === 'stamp')){
       const hs = 8 * u; c.setLineDash([]); c.fillStyle = '#fff'; c.lineWidth = 2 * u; c.strokeStyle = '#1E6BFF';
+      stpEdges(o).forEach(([hx, hy], j) => edgeBar(c, hx, hy, 0, j % 2 === 0, u, '#1E6BFF'));
+      c.fillStyle = '#fff'; c.lineWidth = 2 * u; c.strokeStyle = '#1E6BFF';
       for (const [hx, hy] of [[o.x, o.y], [o.x + o.w, o.y], [o.x + o.w, o.y + o.h], [o.x, o.y + o.h]]){ c.fillRect(hx - hs, hy - hs, hs * 2, hs * 2); c.strokeRect(hx - hs, hy - hs, hs * 2, hs * 2); }
     }
     if (o.type === 'bubble' && o.tail && (tool === 'move' || tool === 'bubble')){
@@ -947,8 +988,10 @@ function placeZoomPill(){
   const zs = $('#zSlide');
   if (zs){
     const r = $('#stage').getBoundingClientRect();
-    zs.style.left = (zs.classList.contains('open') ? r.left + r.width / 2 - zs.offsetWidth / 2 : r.right - zs.offsetWidth - 10) + 'px';
-    zs.style.top = (r.bottom - zs.offsetHeight - 10) + 'px';
+    const hb = $('header').getBoundingClientRect();
+    zs.style.left = Math.max(6, (window.innerWidth - zs.offsetWidth) / 2) + 'px';
+    zs.style.top = (hb.bottom + 4) + 'px';
+    const hz = $('#hzBtn'); if (hz){ hz.classList.toggle('on', zs.classList.contains('open')); hz.classList.toggle('zoomed', Math.abs(viewZoom - 1) >= 0.01); }
     if (document.activeElement !== $('#zsR')) $('#zsR').value = zToV(viewZoom);
   }
   const pill = $('#zPill'); if (!pill) return;
@@ -957,10 +1000,11 @@ function placeZoomPill(){
   if (zoomed){ const r = $('#stage').getBoundingClientRect(); pill.style.top = (r.top + 8) + 'px'; }
 }
 window.addEventListener('resize', () => { if (typeof placeZoomPill === 'function') placeZoomPill(); });
-function applyScale(){
+function applyScale(quick){
   scale = fitScale * viewZoom;
   cv.style.width = cv.width * scale + 'px';
   cv.style.height = cv.height * scale + 'px';
+  if (quick) return;
   $('#zVal').textContent = Math.abs(viewZoom - 1) < 0.01 ? '全体' : Math.round(viewZoom * 100) + '%';
   $('#zVal').title = Math.abs(viewZoom - 1) < 0.01 ? '画面に合わせて表示中' : '画面に合わせる (0)';
   placeZoomPill();
@@ -971,10 +1015,13 @@ function applyScale(){
 function setZoom(z, cx, cy){
   if (cx == null){ const sr = stage.getBoundingClientRect(); cx = sr.left + sr.width / 2; cy = sr.top + sr.height / 2; }
   const r0 = cv.getBoundingClientRect();
-  const ix = (cx - r0.left) / scale, iy = (cy - r0.top) / scale;
+  zoomAt(z, (cx - r0.left) / scale, (cy - r0.top) / scale, cx, cy);
+}
+// 画像上の点(ix,iy)（表示倍率1のときの位置）が、画面の(cx,cy)に来るように拡大して動かす
+function zoomAt(z, ix, iy, cx, cy, quick){
   viewZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
   if (Math.abs(viewZoom - 1) < 0.04) viewZoom = 1;
-  applyScale();
+  applyScale(quick);
   const r1 = cv.getBoundingClientRect();
   stage.scrollLeft += (r1.left + ix * scale) - cx;
   stage.scrollTop += (r1.top + iy * scale) - cy;
@@ -989,6 +1036,8 @@ let zsTimer = 0, zsHold = false;
 function zsClose(){ clearTimeout(zsTimer); $('#zSlide').classList.remove('open'); $('#zsR').blur(); placeZoomPill(); }
 function zsKick(){ clearTimeout(zsTimer); zsTimer = setTimeout(() => { if (!zsHold) zsClose(); }, 3000); }
 $('#zsBtn').addEventListener('click', () => { $('#zSlide').classList.add('open'); placeZoomPill(); zsKick(); });
+$('#hzBtn').addEventListener('click', () => { if ($('#zSlide').classList.contains('open')) zsClose(); else { $('#zSlide').classList.add('open'); placeZoomPill(); zsKick(); } });
+$('#zsFit').addEventListener('click', () => { viewZoom = 1; applyScale(); zsKick(); });
 $('#zSlide').addEventListener('pointerdown', () => { zsHold = true; clearTimeout(zsTimer); });
 window.addEventListener('pointerup', () => { if (zsHold){ zsHold = false; zsKick(); } });
 window.addEventListener('pointercancel', () => { if (zsHold){ zsHold = false; zsKick(); } });
@@ -1016,7 +1065,8 @@ stage.addEventListener('pointerdown', e => {
     if (held){ clearTimeout(held.t); held = null; }   // まだ描き始めていない1本目の指は、なかったことにする
     if (drag){ objs = JSON.parse(drag.snap); drag = null; }
     const [a, b] = [...ptrs.values()];
-    pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: viewZoom, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, r = cv.getBoundingClientRect();
+    pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: viewZoom, ix: (mx - r.left) / scale, iy: (my - r.top) / scale, raf: 0 };
     pinchLock = true; render();
   }
 }, true);
@@ -1024,16 +1074,19 @@ window.addEventListener('pointermove', e => {
   if (!ptrs.has(e.pointerId)) return;
   ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (!pinch || ptrs.size < 2) return;
-  const [a, b] = [...ptrs.values()];
-  const d = Math.hypot(a.x - b.x, a.y - b.y), mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-  stage.scrollLeft -= mid.x - pinch.mid.x; stage.scrollTop -= mid.y - pinch.mid.y;
-  pinch.mid = mid;
-  setZoom(pinch.z0 * d / pinch.d0, mid.x, mid.y);
+  if (!pinch.raf) pinch.raf = requestAnimationFrame(pinchFrame);
 }, true);
+function pinchFrame(){
+  if (!pinch || ptrs.size < 2) return;
+  pinch.raf = 0;
+  const [a, b] = [...ptrs.values()];
+  const d = Math.hypot(a.x - b.x, a.y - b.y);
+  zoomAt(pinch.z0 * d / pinch.d0, pinch.ix, pinch.iy, (a.x + b.x) / 2, (a.y + b.y) / 2, true);
+}
 const pinchEnd = e => {
   if (!ptrs.has(e.pointerId)) return;
   ptrs.delete(e.pointerId);
-  if (ptrs.size < 2) pinch = null;
+  if (ptrs.size < 2 && pinch){ cancelAnimationFrame(pinch.raf); pinch = null; applyScale(); }
   if (ptrs.size === 0) pinchLock = false;
 };
 window.addEventListener('pointerup', pinchEnd, true);
@@ -1098,6 +1151,8 @@ cv.addEventListener('pointerdown', e => {
     const cs = [[st.x, st.y], [st.x + st.w, st.y], [st.x + st.w, st.y + st.h], [st.x, st.y + st.h]];
     const k = cs.findIndex(([hx, hy]) => Math.hypot(p.x - hx, p.y - hy) * scale < 22);
     if (k >= 0){ drag = { i: sel, stpFix: cs[(k + 2) % 4], ratio: st.w / st.h, snap: snapshot(), moved: false, start: p }; capPtr(e); return; }
+    const ke = stpEdges(st).findIndex(([hx, hy]) => Math.hypot(p.x - hx, p.y - hy) * scale < 20);
+    if (ke >= 0){ drag = { i: sel, stpEdge: ke, src: { x: st.x, y: st.y, w: st.w, h: st.h }, snap: snapshot(), moved: false, start: p }; capPtr(e); return; }
   }
   if (tool === 'stamp'){
     sel = hit(p, o => o.type === 'stamp');
@@ -1137,6 +1192,7 @@ cv.addEventListener('pointerdown', e => {
   if (tool === 'erase'){ o.lw = ersPx(ersLv); delete o.color; delete o.ol; }
   if (tool === 'marker'){ o.color = mkColor; o.lw = size * unit() * MK; o.ol = false; o.alpha = mkAlpha; }
   if (tool === 'pen' || tool === 'erase' || tool === 'marker') o.pts = [[p.x, p.y]]; else { o.a = [p.x, p.y]; o.b = [p.x, p.y]; }
+  if (lineOn && LINE_TOOLS.includes(tool)){ o.la = [p.x, p.y]; o.pts = [[p.x, p.y], [p.x, p.y]]; }
   hoverP = p;
   if (tool === 'arrow') o.bend = curveDir * curveAmt / 100;
   if (tool === 'mosaic') o.px = mosPx(mosLv);
@@ -1150,7 +1206,8 @@ cv.addEventListener('pointermove', e => {
   if (tool === 'erase'){ hoverP = pos(e); if (!drawing) render(); }
   if (drawing){
     const p = pos(e);
-    if (drawing.type === 'pen' || drawing.type === 'erase' || drawing.type === 'marker'){
+    if (drawing.la) drawing.pts = linePts(drawing.la, snapEnd(drawing.la, [p.x, p.y]));
+    else if (drawing.type === 'pen' || drawing.type === 'erase' || drawing.type === 'marker'){
       const l = drawing.pts[drawing.pts.length - 1];
       if (Math.hypot(p.x - l[0], p.y - l[1]) * scale > 1.5) drawing.pts.push([p.x, p.y]);
     } else drawing.b = [p.x, p.y];
@@ -1168,6 +1225,17 @@ cv.addEventListener('pointermove', e => {
         if (k.includes('b')) cr[3] = (cl(p.y, s.y + m, g.ft + g.Hf) - g.ft) / g.Hf;
         const o = objs[drag.i];
         o.crop = cr; o.x = g.fl + cr[0] * g.Wf; o.y = g.ft + cr[1] * g.Hf; o.w = (cr[2] - cr[0]) * g.Wf; o.h = (cr[3] - cr[1]) * g.Hf;
+        render();
+      }
+      return;
+    }
+    if (drag.stpEdge != null){   // 辺のつまみ：縦だけ・横だけ伸び縮み（反対側の辺は動かさない）
+      if (drag.moved){
+        const s = drag.src, o = objs[drag.i], k = drag.stpEdge, mn = 16;
+        if (k === 1){ o.w = Math.max(mn, p.x - s.x); }
+        else if (k === 3){ const x1 = s.x + s.w; o.x = Math.min(p.x, x1 - mn); o.w = x1 - o.x; }
+        else if (k === 2){ o.h = Math.max(mn, p.y - s.y); }
+        else { const y1 = s.y + s.h; o.y = Math.min(p.y, y1 - mn); o.h = y1 - o.y; }
         render();
       }
       return;
@@ -1212,8 +1280,9 @@ function endPointer(){
     startText(null, -1, { x: q.x, y: q.y + q.fs * 0.6 }, { type: 'bubble', tail: q.tail, shape: bubShape, seed: (Math.random() * 1e9) | 0 });
     return;
   }
+  lnGuide = null;
   if (drawing){
-    const o = drawing; drawing = null;
+    const o = drawing; drawing = null; delete o.la;
     if (o.type === 'speed' && Math.min(Math.abs(o.b[0] - o.a[0]), Math.abs(o.b[1] - o.a[1])) * scale <= 6){   // タップだけなら、そこを中心に少し空ける
       const rx = cv.width * 0.14, ry = cv.height * 0.14; o.b = [o.a[0] + rx, o.a[1] + ry]; o.a = [o.a[0] - rx, o.a[1] - ry];
     }
@@ -1310,6 +1379,7 @@ $('#sizeR').addEventListener('change', () => {
   sizeSnap = null; updateUI();
 });
 $('#olBtn').addEventListener('click', () => { outline = !outline; if (outline) neon = false; applyStyle(); });
+$('#lineBtn').addEventListener('click', () => { lineOn = !lineOn; updateUI(); });
 $('#neonBtn').addEventListener('click', () => { neon = !neon; if (neon) outline = false; applyStyle(); });
 const fontBox = $('#fontG');
 Object.entries(FONTS).forEach(([k, d]) => {
@@ -1351,6 +1421,9 @@ function stampSpot(s){
   return [x, y];
 }
 // トリミング：切り取る前の画像全体が、今の大きさだとどこにどの大きさで来るか
+function stpEdges(o){ const mx = o.x + o.w / 2, my = o.y + o.h / 2; return [[mx, o.y], [o.x + o.w, my], [mx, o.y + o.h], [o.x, my]]; }
+// 元の画像（切り取った範囲）の縦横比
+function stpRatio(o){ const im = stampImgs[o.img]; if (!im) return o.w / o.h; const cr = o.crop || [0, 0, 1, 1]; return ((cr[2] - cr[0]) * im.width) / ((cr[3] - cr[1]) * im.height); }
 function cropGeom(o){
   const cr = o.crop || [0, 0, 1, 1], Wf = o.w / (cr[2] - cr[0]), Hf = o.h / (cr[3] - cr[1]);
   return { Wf, Hf, fl: o.x - cr[0] * Wf, ft: o.y - cr[1] * Hf };
@@ -1398,6 +1471,11 @@ function dupStamp(){
 }
 $('#stpAdd').addEventListener('click', addStampFromBase);
 $('#stpDup').addEventListener('click', dupStamp);
+$('#stpRatio').addEventListener('click', () => {
+  const o = objs[sel]; if (!o || o.type !== 'stamp') return;
+  pushUndo();
+  const cy = o.y + o.h / 2; o.h = o.w / stpRatio(o); o.y = cy - o.h / 2; render(); updateUI();
+});
 const mkBox = $('#mkG');
 MK_COLORS.forEach(([name, c]) => {
   const b = document.createElement('button');
@@ -1556,6 +1634,8 @@ function updateUI(){
   const mkCtxOn = tool === 'marker' || (objs[sel] && objs[sel].type === 'marker');
   $('#mkG').hidden = !mkCtxOn;
   $('#neonBtn').hidden = !(NEON_TYPES.includes(tool) || (objs[sel] && NEON_TYPES.includes(objs[sel].type)));
+  $('#lineBtn').hidden = !LINE_TOOLS.includes(tool);
+  $('#lineBtn').setAttribute('aria-pressed', String(lineOn));
   $('#mkaG').hidden = !mkCtxOn;
   mkBox.querySelectorAll('.mk').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === mkColor)));
   $('#delG').hidden = !(tool === 'move' && sel >= 0);
@@ -1569,10 +1649,13 @@ function updateUI(){
   $('#stpCrop').textContent = cropMode ? 'トリミング完了' : 'トリミング';
   $('#stpCropReset').hidden = !(cropMode && stpSel && objs[sel].crop);
   $('#stpAdd').hidden = cropMode;
-  $('#stpHint').textContent = cropMode ? '四辺・四隅の□で切り取る範囲を決められます' : '四隅の□で大きさを変えられます';
+  $('#stpRatio').hidden = !(stpSel && !cropMode && Math.abs(objs[sel].w / objs[sel].h - stpRatio(objs[sel])) > 0.01);
+  $('#stpHint').textContent = cropMode ? '四辺・四隅の□で切り取る範囲を決められます' : '四隅の□で大きさ、四辺の白いつまみで縦・横だけ伸び縮み';
   $('#ersG').hidden = !ersCtx;
   $('#spdG').hidden = !spdCtx;
   document.querySelector('.g-fin').hidden = !!bubCtx || mosCtxOn || spdCtx || ersCtx || mkCtxOn;   // 吹き出し・モザイクにはフチを使わないので隠す
+  if (mkCtxOn && tool === 'marker') document.querySelector('.g-fin').hidden = false;
+  $('#olBtn').hidden = !!mkCtxOn;
   document.querySelector('.g-colors').hidden = document.querySelector('.g-size').hidden = mosCtxOn || ersCtx || stpCtx;
   if (mkCtxOn){ document.querySelector('.g-colors').hidden = true; $('#dotPreview').style.background = mkColor; }   // マーカーは蛍光色の列を使う   // モザイクは色・太さを使わない
   $('#curveG').hidden = !(tool === 'arrow' || (tool === 'move' && objs[sel] && objs[sel].type === 'arrow'));
@@ -2018,12 +2101,12 @@ function studioDrop(e){
 // ---------- フリーコラージュ（枚数・配置・重なりを自由に） ----------
 const FW_MIN = 0.03, FW_MAX = 3;
 const HINT_SLOT = '空いているマスをタップすると、スクショの貼り付けか写真選びができます。入れた画像はドラッグで移動、白い四隅のつまみで拡大・縮小、上の赤いつまみで回転。';
-const HINT_FREE = 'フリー：「＋ 画像を追加」か、画像の外をタップすると次の画像を貼り付けられます。ドラッグで移動、白い四隅で拡大・縮小、赤いつまみで回転。重なり順は「前へ」「後ろへ」。';
+const HINT_FREE = 'フリー：「＋ 画像を追加」か、画像の外をタップすると次の画像を貼り付けられます。ドラッグで移動、白い四隅で拡大・縮小、四辺のまんなかの白いつまみで縦だけ・横だけ伸び縮み、赤いつまみで回転。重なり順は「前へ」「後ろへ」。';
 function setHint(){ $('#stHint').textContent = col.layout === 'free' ? HINT_FREE : HINT_SLOT; }
 $('#stHint').addEventListener('click', e => e.currentTarget.classList.toggle('open'));
 function fDims(it, W = sc.width, H = sc.height){
   const iw = it.img.naturalWidth || it.img.width, ih = it.img.naturalHeight || it.img.height;
-  const dw = it.w * W, dh = dw * ih / iw;
+  const dw = it.w * W, dh = dw * ih / iw * (it.sy || 1);   // sy：縦だけ伸ばした・縮めた分
   return { cx: it.x * W, cy: it.y * H, dw, dh };
 }
 function fCorners(it){
@@ -2032,6 +2115,16 @@ function fCorners(it){
     const lx = sx * dw / 2, ly = sy * dh / 2;
     return [cx + lx * ca - ly * sa, cy + lx * sa + ly * ca];
   });
+}
+// 四辺のまんなかのつまみ（上・右・下・左）：ここを引くと縦だけ・横だけ伸び縮みする
+function fEdges(it){
+  const { cx, cy, dw, dh } = fDims(it), a = it.rot || 0, ca = Math.cos(a), sa = Math.sin(a);
+  return [[0, -dh / 2], [dw / 2, 0], [0, dh / 2], [-dw / 2, 0]].map(([lx, ly]) => [cx + lx * ca - ly * sa, cy + lx * sa + ly * ca]);
+}
+function edgeBar(c, x, y, a, horiz, u, stroke){
+  c.save(); c.translate(x, y); c.rotate(a + (horiz ? 0 : Math.PI / 2));
+  const w = 22 * u, h = 9 * u; c.beginPath(); if (c.roundRect) c.roundRect(-w / 2, -h / 2, w, h, h / 2); else c.rect(-w / 2, -h / 2, w, h);
+  c.fillStyle = '#FFFFFF'; c.fill(); c.lineWidth = 2.5 * u; c.strokeStyle = stroke; c.stroke(); c.restore();
 }
 function fRotHandle(it){
   const { cx, cy, dh } = fDims(it), a = it.rot || 0, d = dh / 2 + 34 / sScale;
@@ -2085,6 +2178,7 @@ function drawFree(c, W, H, preview){
   c.beginPath(); cs.forEach(([x, y], j) => j ? c.lineTo(x, y) : c.moveTo(x, y)); c.closePath(); c.stroke();
   c.setLineDash([]); c.beginPath(); c.moveTo((cs[0][0] + cs[1][0]) / 2, (cs[0][1] + cs[1][1]) / 2); c.lineTo(rx, ry); c.stroke();
   c.restore();
+  fEdges(it).forEach(([x, y], j) => edgeBar(c, x, y, it.rot || 0, j % 2 === 0, u, '#E8262B'));
   cs.forEach(([x, y]) => {
     c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
     c.fillStyle = '#FFFFFF'; c.fill(); c.lineWidth = 3.5 * u; c.strokeStyle = '#E8262B'; c.stroke();
@@ -2093,14 +2187,17 @@ function drawFree(c, W, H, preview){
 }
 function freeHandleAt(p){
   const it = col.free[col.fsel]; if (!it) return -1;
-  const u = 1 / sScale, tol = 24 * u, spots = [...fCorners(it), fRotHandle(it)];
+  const u = 1 / sScale, tol = 24 * u, spots = [...fCorners(it), fRotHandle(it), ...fEdges(it)];
   let best = -1, bd = Infinity;
   spots.forEach(([x, y], j) => { const d = Math.hypot(p.x - x, p.y - y); if (d < tol && d < bd){ bd = d; best = j; } });
   return best;
 }
 function freeDown(e){
   const p = sPos(e), hj = freeHandleAt(p), it = col.free[col.fsel];
-  if (hj === 4){
+  if (hj >= 5){
+    const { cx, cy, dw, dh } = fDims(it);
+    sDrag = { mode: 'edge', side: hj - 5, start: p, moved: true, c0: [cx, cy], dw0: dw, dh0: dh, a: it.rot || 0 };
+  } else if (hj === 4){
     const { cx, cy } = fDims(it);
     sDrag = { mode: 'rotate', start: p, moved: true, c0: [cx, cy], rot0: it.rot || 0, a0: Math.atan2(p.y - cy, p.x - cx) };
   } else if (hj >= 0){
@@ -2118,6 +2215,19 @@ function freeMove(e){
   const p = sPos(e), it = col.free[col.fsel];
   if (sDrag.mode === 'rotate'){
     it.rot = normRot(sDrag.rot0 + Math.atan2(p.y - sDrag.c0[1], p.x - sDrag.c0[0]) - sDrag.a0, true);
+    renderStudio(); return;
+  }
+  if (sDrag.mode === 'edge'){
+    const d = sDrag, a = d.a, ux = [Math.cos(a), Math.sin(a)], uy = [-Math.sin(a), Math.cos(a)];
+    const iw = it.img.naturalWidth || it.img.width, ih = it.img.naturalHeight || it.img.height, rr = ih / iw;
+    const horiz = d.side % 2 === 1, ax = horiz ? ux : uy, half = horiz ? d.dw0 / 2 : d.dh0 / 2, sg = (d.side === 1 || d.side === 2) ? 1 : -1;
+    const an = [d.c0[0] - sg * ax[0] * half, d.c0[1] - sg * ax[1] * half];   // 反対側の辺は動かさない
+    const mn = Math.max(12 / sScale, sc.width * FW_MIN);
+    let len = Math.max(mn, sg * ((p.x - an[0]) * ax[0] + (p.y - an[1]) * ax[1]));
+    if (horiz){ len = Math.min(len, sc.width * FW_MAX); it.w = len / sc.width; it.sy = d.dh0 / (len * rr); }
+    else { len = Math.min(len, sc.height * 3); it.sy = len / (d.dw0 * rr); }
+    if (Math.abs(it.sy - 1) < 0.015) it.sy = 1;
+    it.x = (an[0] + sg * ax[0] * len / 2) / sc.width; it.y = (an[1] + sg * ax[1] * len / 2) / sc.height;
     renderStudio(); return;
   }
   if (sDrag.mode === 'scale'){
@@ -2201,7 +2311,9 @@ function syncFreeCtl(){
   const deg = Math.round((it.rot || 0) * 180 / Math.PI);
   $('#fRot').value = deg; $('#fRotVal').textContent = deg + '°';
   $('#fFrame').setAttribute('aria-pressed', String(!!it.frame));
+  $('#fRatio').hidden = !it.sy || it.sy === 1;
 }
+$('#fRatio').addEventListener('click', () => { const it = col.free[col.fsel]; if (it){ delete it.sy; renderStudio(); } });
 $('#fSize').addEventListener('input', e => { const it = col.free[col.fsel]; if (it){ it.w = +e.target.value; renderStudio(); } });
 $('#fRot').addEventListener('input', e => { const it = col.free[col.fsel]; if (it){ it.rot = +e.target.value * Math.PI / 180; renderStudio(); } });
 $('#fFrame').addEventListener('click', () => { const it = col.free[col.fsel]; if (it){ it.frame = !it.frame; renderStudio(); } });
@@ -2222,7 +2334,7 @@ $('#fDel').addEventListener('click', freeRemove);
 $('#fFit').addEventListener('click', () => {
   const it = col.free[col.fsel]; if (!it) return;
   const iw = it.img.naturalWidth || it.img.width, ih = it.img.naturalHeight || it.img.height;
-  it.w = Math.min(1, (sc.height * iw) / (sc.width * ih));
+  it.w = Math.min(1, (sc.height * iw) / (sc.width * ih * (it.sy || 1)));
   it.x = 0.5; it.y = 0.5; it.rot = 0;
   renderStudio();
 });
