@@ -133,6 +133,8 @@ canvas.text{cursor:text}
 .g-spd input{width:150px;accent-color:var(--red)}
 .g-mos .mv{font-weight:400;white-space:nowrap}
 .g-mos input{width:150px;accent-color:var(--red)}
+.g-mos .mk2{display:flex;gap:2px;background:var(--soft);border-radius:999px;padding:2px;flex:none}
+.g-mos .mk2 .chip{padding:5px 11px;border-radius:999px;white-space:nowrap}
 .g-bub{gap:2px;padding:3px}
 .g-bub .chip{display:flex;align-items:center;gap:4px;padding:5px 8px}
 .g-bub .chip svg{width:18px;height:18px;flex:none}
@@ -265,6 +267,7 @@ canvas.text{cursor:text}
   .g-ers input{flex:1;width:auto;min-width:60px}
   .g-spd input{flex:1;width:auto;min-width:40px}
   .g-mos input{flex:1;width:auto;min-width:60px}
+  .g-mos label{display:none}
   .g-bub .chip{padding:5px 7px}
   .g-bub .chip span{display:none}
   .g-font .chip{font-size:13px;padding:6px 8px}
@@ -394,7 +397,7 @@ button{touch-action:manipulation}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-7l-5 4v-4H6a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3z"/></svg><span class="lb">吹き出し</span></button>
     <button class="tool" data-tool="speed" type="button" title="集中線 (L)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 2.5l5 5M21.5 2.5l-5 5M2.5 21.5l5-5M21.5 21.5l-5-5M12 1.5v5M12 22.5v-5M1.5 12h5M22.5 12h-5"/></svg><span class="lb">集中線</span></button>
-    <button class="tool" data-tool="mosaic" type="button" title="モザイク (M)" aria-pressed="false">
+    <button class="tool" data-tool="mosaic" type="button" title="モザイク・ぼかし (M)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><rect x="3.75" y="9.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="15.75" y="9.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="9.75" y="3.75" width="4.5" height="4.5" rx=".8" opacity=".45"/><rect x="9.75" y="15.75" width="4.5" height="4.5" rx=".8" opacity=".45"/></svg><span class="lb">モザイク</span></button>
     <button class="tool" data-tool="stamp" type="button" title="スタンプ (S)" aria-pressed="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="8" width="12" height="12" rx="1.5"/><path d="M8 8V5.5A1.5 1.5 0 0 1 9.5 4H19.5A1.5 1.5 0 0 1 21 5.5V15.5A1.5 1.5 0 0 1 19.5 17H15"/></svg><span class="lb">スタンプ</span></button>
@@ -477,11 +480,15 @@ button{touch-action:manipulation}
     <button class="chip" id="spdFull" type="button" title="線が出る外枠を画像全体に戻す">外枠を全体に</button>
   </div>
 
-  <div class="group g-mos" id="mosG" role="group" aria-label="モザイクの粗さ" hidden>
-    <label for="mosR">粗さ</label>
-    <span class="mv">細かい</span>
-    <input type="range" id="mosR" min="1" max="10" step="1" value="5" aria-label="モザイクの粗さ">
-    <span class="mv">粗い</span>
+  <div class="group g-mos" id="mosG" role="group" aria-label="モザイク・ぼかし" hidden>
+    <div class="mk2" role="group" aria-label="モザイクかぼかしか">
+      <button class="chip" id="mkMos" type="button" aria-pressed="true">モザイク</button>
+      <button class="chip" id="mkBlur" type="button" aria-pressed="false">ぼかし</button>
+    </div>
+    <label for="mosR" id="mosLb">粗さ</label>
+    <span class="mv" id="mosLo">細かい</span>
+    <input type="range" id="mosR" min="1" max="10" step="1" value="6" aria-label="モザイクの粗さ">
+    <span class="mv" id="mosHi">粗い</span>
   </div>
 
   <div class="group g-font" id="fontG" role="group" aria-label="文字のフォント" hidden></div>
@@ -631,8 +638,14 @@ function snapEnd(a, p){
 let ersLv = 4, hoverP = null;   // 消しゴムの大きさ（1〜10）、消しゴムの丸を出す位置
 const ersPx = lv => Math.max(4, Math.round(lv * 9 * unit()));   // 大きさ → 消す幅（画像のピクセル）
 let spdN = 5;   // 集中線の本数（1〜10）
-let mosLv = 5;   // モザイクの粗さ（1〜10）
-const mosPx = lv => Math.max(3, Math.round(lv * 5 * unit()));   // 粗さ → 1マスの大きさ（画像のピクセル）
+let mosLv = 6, blurLv = 6, mosKind = 'mos';   // モザイクの粗さ／ぼかしの強さ（1〜10）、今どちらを使うか
+// 粗さ → 1マスの大きさ（画像のピクセル）。1〜3あたりは文字がうっすら読めないくらいの細かさ
+const MOS_STEPS = [3, 4, 5, 6.5, 8.5, 11, 15, 20, 28, 40];
+const mosPx = lv => Math.max(2, Math.round(MOS_STEPS[lv - 1] * unit()));
+// 強さ → ぼかしの広がり（画像のピクセル）
+const BLUR_STEPS = [1, 1.5, 2, 3, 4, 5.5, 7, 9, 12, 16];
+const blurPx = lv => Math.max(1, BLUR_STEPS[lv - 1] * unit());
+const nearLv = (steps, v) => { let b = 1; steps.forEach((s, i) => { if (Math.abs(s * unit() - v) < Math.abs(steps[b - 1] * unit() - v)) b = i + 1; }); return b; };
 let bubShape = 'round', bubDrag = null;   // 吹き出しの形（round / oval / burst）と、置くときのドラッグ
 const isTextLike = o => !!o && (o.type === 'text' || o.type === 'bubble');
 let curveDir = 1, curveAmt = 16;   // 矢印：1=右カーブ / -1=左カーブ、曲がり具合（0でまっすぐ）
@@ -777,7 +790,45 @@ function mosRect(o){
   const x1 = Math.min(cv.width, Math.max(o.a[0], o.b[0])), y1 = Math.min(cv.height, Math.max(o.a[1], o.b[1]));
   return [x0, y0, x1 - x0, y1 - y0];
 }
+// ---------- ぼかし ----------
+// まわりも少し含めて縮小 → 箱ぼかしを3回（ガウスぼかしに近い）→ 元の大きさに戻して、範囲の中だけに敷く
+const blurCache = new WeakMap();
+function boxBlur(d, w, h, r){
+  const t = new Uint8ClampedArray(d.length), n = 2 * r + 1;
+  const pass = (src, dst, len, cnt, step, line) => {
+    for (let j = 0; j < cnt; j++){
+      const o0 = j * line; let s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+      for (let k = -r; k <= r; k++){ const q = o0 + Math.min(len - 1, Math.max(0, k)) * step; s0 += src[q]; s1 += src[q + 1]; s2 += src[q + 2]; s3 += src[q + 3]; }
+      for (let i = 0; i < len; i++){
+        const p = o0 + i * step; dst[p] = s0 / n; dst[p + 1] = s1 / n; dst[p + 2] = s2 / n; dst[p + 3] = s3 / n;
+        const a = o0 + Math.min(len - 1, i + r + 1) * step, b = o0 + Math.max(0, i - r) * step;
+        s0 += src[a] - src[b]; s1 += src[a + 1] - src[b + 1]; s2 += src[a + 2] - src[b + 2]; s3 += src[a + 3] - src[b + 3];
+      }
+    }
+  };
+  for (let k = 0; k < 3; k++){ pass(d, t, w, h, 4, w * 4); pass(t, d, h, w, w * 4, 4); }
+}
+function drawBlur(c, o){
+  const [x, y, w, h] = mosRect(o); if (w < 1 || h < 1) return;
+  const sg = Math.max(1, o.bl || 8), m = Math.ceil(sg * 2.5);
+  const sx = Math.max(0, Math.floor(x - m)), sy = Math.max(0, Math.floor(y - m)), ex = Math.min(base.width, Math.ceil(x + w + m)), ey = Math.min(base.height, Math.ceil(y + h + m));
+  if (ex - sx < 1 || ey - sy < 1) return;
+  const key = [sx, sy, ex, ey, sg, base.width, base.height].join();
+  let ch = blurCache.get(o);
+  if (!ch || ch.key !== key || ch.base !== base){
+    const f = Math.max(1, sg / 4), tw = Math.max(1, Math.ceil((ex - sx) / f)), th = Math.max(1, Math.ceil((ey - sy) / f));
+    const tc = document.createElement('canvas'); tc.width = tw; tc.height = th;
+    const tx = tc.getContext('2d', { willReadFrequently: true }); tx.imageSmoothingEnabled = true; tx.imageSmoothingQuality = 'high';
+    tx.drawImage(base, sx, sy, ex - sx, ey - sy, 0, 0, tw, th);
+    const id = tx.getImageData(0, 0, tw, th); boxBlur(id.data, tw, th, Math.max(1, Math.round(sg / f))); tx.putImageData(id, 0, 0);
+    ch = { key, base, tc }; blurCache.set(o, ch);
+  }
+  c.save(); c.beginPath(); c.rect(x, y, w, h); c.clip();
+  c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+  c.drawImage(ch.tc, 0, 0, ch.tc.width, ch.tc.height, sx, sy, ex - sx, ey - sy); c.restore();
+}
 function drawMosaic(c, o){
+  if (o.bl){ drawBlur(c, o); return; }
   const [x, y, w, h] = mosRect(o); if (w < 1 || h < 1) return;
   const bs = Math.max(2, o.px || 20), tw = Math.max(1, Math.round(w / bs)), th = Math.max(1, Math.round(h / bs));
   mosTmp.width = tw; mosTmp.height = th;
@@ -1195,7 +1246,7 @@ cv.addEventListener('pointerdown', e => {
   if (lineOn && LINE_TOOLS.includes(tool)){ o.la = [p.x, p.y]; o.pts = [[p.x, p.y], [p.x, p.y]]; }
   hoverP = p;
   if (tool === 'arrow') o.bend = curveDir * curveAmt / 100;
-  if (tool === 'mosaic') o.px = mosPx(mosLv);
+  if (tool === 'mosaic'){ if (mosKind === 'blur') o.bl = blurPx(blurLv); else o.px = mosPx(mosLv); }
   if (tool === 'speed') o.dens = spdN;
   drawing = o; render();
 });
@@ -1519,10 +1570,28 @@ $('#spdFull').addEventListener('click', () => {
   if (o && o.type === 'speed' && o.out){ const before = snapshot(); delete o.out; undoS.push(before); redoS = []; render(); updateUI(); }
 });
 let mosSnap = null;
+function syncMosKind(){
+  const b = mosKind === 'blur';
+  $('#mkMos').setAttribute('aria-pressed', String(!b)); $('#mkBlur').setAttribute('aria-pressed', String(b));
+  $('#mosLb').textContent = b ? '強さ' : '粗さ'; $('#mosLo').textContent = b ? '弱い' : '細かい'; $('#mosHi').textContent = b ? '強い' : '粗い';
+  $('#mosR').value = b ? blurLv : mosLv; $('#mosR').setAttribute('aria-label', b ? 'ぼかしの強さ' : 'モザイクの粗さ');
+}
+// モザイク／ぼかしの切り替え。選んでいる範囲があれば、それも切り替える
+function setMosKind(k){
+  mosKind = k; const o = objs[sel];
+  if (o && o.type === 'mosaic' && !!o.bl !== (k === 'blur')){
+    pushUndo();
+    if (k === 'blur'){ o.bl = blurPx(blurLv); delete o.px; } else { delete o.bl; o.px = mosPx(mosLv); }
+    render();
+  }
+  updateUI();
+}
+$('#mkMos').addEventListener('click', () => setMosKind('mos'));
+$('#mkBlur').addEventListener('click', () => setMosKind('blur'));
 $('#mosR').addEventListener('input', e => {
-  mosLv = +e.target.value;
+  const lv = +e.target.value; if (mosKind === 'blur') blurLv = lv; else mosLv = lv;
   const o = objs[sel];
-  if (o && o.type === 'mosaic'){ if (mosSnap === null) mosSnap = snapshot(); o.px = mosPx(mosLv); render(); }
+  if (o && o.type === 'mosaic'){ if (mosSnap === null) mosSnap = snapshot(); if (o.bl) o.bl = blurPx(lv); else o.px = mosPx(lv); render(); }
 });
 $('#mosR').addEventListener('change', () => {
   if (mosSnap !== null && mosSnap !== snapshot()){ undoS.push(mosSnap); redoS = []; }
@@ -1588,7 +1657,7 @@ function syncFromSel(){
   if (NEON_TYPES.includes(o.type)) neon = !!o.neon;
   if (o.type === 'bubble' && o.shape) bubShape = o.shape;
   if (o.type === 'speed'){ spdN = o.dens || 5; $('#spdN').value = spdN; }
-  if (o.type === 'mosaic'){ mosLv = Math.min(10, Math.max(1, Math.round((o.px || 20) / (5 * unit())))); $('#mosR').value = mosLv; }
+  if (o.type === 'mosaic'){ if (o.bl){ mosKind = 'blur'; blurLv = nearLv(BLUR_STEPS, o.bl); } else { mosKind = 'mos'; mosLv = nearLv(MOS_STEPS, o.px || 20); } syncMosKind(); }
   if (isTextLike(o)){ font = o.font; size = Math.round(o.size / unit() / 6); } else size = Math.round(o.lw / unit() / (o.type === 'marker' ? MK : 1));
   if (o.type === 'marker'){ mkColor = o.color; color = o.color; mkAlpha = typeof o.alpha === 'number' ? o.alpha : 0.5; syncMka(); }
   if (o.type === 'arrow'){ const b = arrowBend(o); curveDir = b < 0 ? -1 : 1; curveAmt = Math.min(60, Math.round(Math.abs(b) * 100)); }
@@ -1629,6 +1698,7 @@ function updateUI(){
   $('#bubG').hidden = !bubCtx;
   const mosCtxOn = tool === 'mosaic' || (objs[sel] && objs[sel].type === 'mosaic');
   $('#mosG').hidden = !mosCtxOn;
+  syncMosKind();
   const spdCtx = tool === 'speed' || (objs[sel] && objs[sel].type === 'speed');
   const ersCtx = tool === 'erase';
   const mkCtxOn = tool === 'marker' || (objs[sel] && objs[sel].type === 'marker');
